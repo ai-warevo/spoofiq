@@ -19,13 +19,14 @@ Spoofiq is a C++23 native desktop application for batch-spoofing media metadata 
 
 ## UI Overview
 
-Three-tab fullscreen dockspace:
+Four-tab fullscreen dockspace:
 
 1. **Batch Spoofer**: Select folder, choose preset, process files
 2. **Presets & Devices**: Add/edit/delete/duplicate device profiles
-3. **Console**: Real-time log output with auto-scroll
+3. **Appearance**: Theme selector (Dark/Light/Midnight), accent color picker, UI scale slider
+4. **Console**: Real-time log output with auto-scroll
 
-Press **ESC** to quit.
+Press **ESC** to quit. Press **F12** (debug builds only) to toggle ImGui style editor.
 
 ---
 
@@ -62,8 +63,12 @@ cmake --build build --config Release
 
 - **Core modules**: types, io (image/metadata), proc (image/video), config, logging, event_bus
 - **UI layer**: ImGui panels (batch_spoofer, presets, console)
-- **Dependencies**: imgui (v1.91.8-docking), nlohmann/json (v3.11.3), spdlog (v1.14.1), aw_tpl (v3.1.0), aw_tobus
-- **Image I/O**: stb_image + stb_image_write (vendored)
+- **Dependencies (FetchContent)**:
+  - **UI**: imgui (v1.91.8-docking), GLFW
+  - **Config**: nlohmann/json (v3.11.3)
+  - **Logging**: spdlog (v1.14.1)
+  - **ai-warevo libraries**: aw_tpl (task scheduling), aw_tobus (event bus), aw_cmake_modules (CMake helpers)
+- **Image I/O**: stb_image + stb_image_write (vendored headers)
 - **EXIF**: Manual TIFF/EXIF structure building (no external library)
 
 See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for module DAG and design decisions.
@@ -89,13 +94,16 @@ Settings stored in:
 - **Linux/macOS**: `~/.config/spoofiq/config.json`
 - **Windows**: `%APPDATA%\spoofiq\config.json`
 
-Structure:
+**AppSettings structure:**
 ```json
 {
   "last_input_directory": "/path/to/images",
   "export_to_subfolder": false,
   "subfolder_name": "spoofed",
   "manual_start_index": 1,
+  "theme": "Dark",
+  "accent_color": [0.22, 0.74, 0.97],
+  "ui_scale": 1.0,
   "presets": [
     {
       "id": "iphone_16_pro_max",
@@ -114,6 +122,11 @@ Structure:
   ]
 }
 ```
+
+**Appearance settings**:
+- `theme`: "Dark", "Light", or "Midnight"
+- `accent_color`: RGB array [0.0–1.0] for button/header tints
+- `ui_scale`: 0.8–1.5 for DPI-friendly scaling
 
 ---
 
@@ -146,11 +159,17 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-## Credits
+## Dependencies
+
+**ai-warevo** provides core libraries via FetchContent:
+- **aw_tpl**: Task scheduling and async/await (C++23)
+- **aw_tobus**: Event bus for real-time logging and inter-module communication
+- **aw_cmake_modules**: CMake build helpers and FetchContent integration
+
+**Credits**
 
 - **ImGui**: [ocornut/imgui](https://github.com/ocornut/imgui)
 - **stb**: [nothings/stb](https://github.com/nothings/stb)
 - **nlohmann/json**: [nlohmann/json](https://github.com/nlohmann/json)
 - **spdlog**: [gabime/spdlog](https://github.com/gabime/spdlog)
-- **aw_tpl**: [atomw/tpl](https://github.com/atomw/tpl)
-- **aw_tobus**: [atomw/tobus](https://github.com/atomw/tobus)
+- **ai-warevo**: Task scheduling (aw_tpl), event bus (aw_tobus), CMake modules (aw_cmake_modules)
