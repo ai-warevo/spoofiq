@@ -14,6 +14,7 @@
 #include <aw/spoofiq/ui/panels/batch_spoofer_panel.hpp>
 #include <aw/spoofiq/ui/panels/presets_panel.hpp>
 #include <aw/spoofiq/ui/panels/console_panel.hpp>
+#include <aw/spoofiq/ui/panels/appearance_panel.hpp>
 #include <aw/spoofiq/logger.hpp>
 #include <aw/spoofiq/event_bus_manager.hpp>
 
@@ -109,12 +110,17 @@ int main() {
     registry.register_panel(std::make_shared<aw::spoofiq::ui::BatchSpooferPanel>());
     registry.register_panel(std::make_shared<aw::spoofiq::ui::PresetsPanel>());
     registry.register_panel(std::make_shared<aw::spoofiq::ui::ConsolePanel>());
+    registry.register_panel(std::make_shared<aw::spoofiq::ui::AppearancePanel>());
 
     // UI root
     aw::spoofiq ::UiRoot ui_root(app_state, registry);
 
     // Setup initial style
     setup_imgui_style(app_state.dark_mode);
+    
+#ifndef NDEBUG
+    bool show_style_editor = false;
+#endif
 
     // Main loop
     while (!glfwWindowShouldClose(window)) {
@@ -124,6 +130,13 @@ int main() {
         if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
+        
+#ifndef NDEBUG
+        // F12 toggles style editor in debug builds only
+        if (ImGui::IsKeyPressed(ImGuiKey_F12)) {
+            show_style_editor = !show_style_editor;
+        }
+#endif
 
         // Start ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -132,6 +145,15 @@ int main() {
 
         // Always render UI (no toggle)
         ui_root.render();
+        
+#ifndef NDEBUG
+        // Developer-only: show ImGui style editor when toggled
+        if (show_style_editor) {
+            ImGui::Begin("Debug: Style Editor", &show_style_editor);
+            ImGui::ShowStyleEditor();
+            ImGui::End();
+        }
+#endif
 
         // Rendering
         ImGui::Render();

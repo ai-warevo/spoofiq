@@ -12,8 +12,9 @@ enum class PanelId : std::uint32_t {
     BatchSpoofer = 0,
     PresetsDevices = 1,
     Console = 2,
-    General = 3,
-    OverlayDemo = 4,
+    Appearance = 3,
+    General = 4,
+    OverlayDemo = 5,
 };
 
 /// Drawing command types for overlay canvas.

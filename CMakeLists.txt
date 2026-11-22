@@ -257,6 +257,7 @@ aw_add_library(TARGET spoofiq_ui TYPE STATIC ALIAS aw::spoofiq::ui
         src/ui/panels/batch_spoofer_panel.cpp
         src/ui/panels/presets_panel.cpp
         src/ui/panels/console_panel.cpp
+        src/ui/panels/appearance_panel.cpp
     HEADERS
         include/aw/spoofiq/ui.hpp
         include/aw/spoofiq/spoofiq.hpp

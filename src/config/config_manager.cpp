@@ -54,6 +54,9 @@ void to_json(nlohmann::json& j, const AppSettings& s) {
         {"embed_gps", s.embed_gps},
         {"randomize_gps", s.randomize_gps},
         {"gps_radius_meters", s.gps_radius_meters},
+        {"theme", s.theme},
+        {"accent_color", nlohmann::json::array({s.accent_color[0], s.accent_color[1], s.accent_color[2]})},
+        {"ui_scale", s.ui_scale},
         {"presets", s.presets}
     };
 }
@@ -73,6 +76,19 @@ void from_json(const nlohmann::json& j, AppSettings& s) {
     s.embed_gps = j.value("embed_gps", true);
     s.randomize_gps = j.value("randomize_gps", false);
     s.gps_radius_meters = j.value("gps_radius_meters", 0.0f);
+    s.theme = j.value("theme", "Dark");
+    s.ui_scale = j.value("ui_scale", 1.0f);
+    
+    if (j.contains("accent_color") && j["accent_color"].is_array() && j["accent_color"].size() == 3) {
+        s.accent_color[0] = j["accent_color"][0];
+        s.accent_color[1] = j["accent_color"][1];
+        s.accent_color[2] = j["accent_color"][2];
+    } else {
+        s.accent_color[0] = 0.22f;  // Default cyan (#38BDF8)
+        s.accent_color[1] = 0.74f;
+        s.accent_color[2] = 0.97f;
+    }
+    
     if (j.contains("presets") && j["presets"].is_array()) {
         s.presets = j["presets"].get<std::vector<DevicePreset>>();
     }

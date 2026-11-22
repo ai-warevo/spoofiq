@@ -51,7 +51,7 @@ void UiRoot::render() {
         ImGui::Separator();
         ImGui::Spacing();
 
-        // Main tab bar with only our 3 tabs
+        // Main tab bar with 4 tabs
         if (ImGui::BeginTabBar("MainTabs", ImGuiTabBarFlags_None)) {
             // Tab 1: Batch Spoofer
             if (ImGui::BeginTabItem("Batch Spoofer")) {
@@ -75,7 +75,17 @@ void UiRoot::render() {
                 ImGui::EndTabItem();
             }
 
-            // Tab 3: Console (with unread badge)
+            // Tab 3: Appearance
+            if (ImGui::BeginTabItem("Appearance")) {
+                if (auto appearance_panel = registry_.get_panel(PanelId::Appearance)) {
+                    appearance_panel->render();
+                } else {
+                    ImGui::TextWrapped("Appearance panel not registered.");
+                }
+                ImGui::EndTabItem();
+            }
+
+            // Tab 4: Console (with unread badge)
             int console_unread = 0;
             if (auto console_panel = registry_.get_panel(PanelId::Console)) {
                 if (auto* cp = dynamic_cast<aw::spoofiq::ui::ConsolePanel*>(console_panel.get())) {

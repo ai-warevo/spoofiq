@@ -49,6 +49,11 @@ struct AppSettings {
     bool randomize_gps;
     float gps_radius_meters;
     
+    // Appearance settings
+    std::string theme;         // "Dark", "Light", "Midnight"
+    float accent_color[3];     // RGB 0.0-1.0
+    float ui_scale;            // 0.8-1.5
+    
     // Saved presets
     std::vector<DevicePreset> presets;
 };
