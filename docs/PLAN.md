@@ -2,11 +2,12 @@
 
 ## Status
 
-**Current Release**: v0.2.0 (Alpha 1) ✅ [In Progress]
-- Modular architecture refactored
-- Core, I/O, and processing layers separated
-- Dependencies (json, spdlog, TagLib) available but not yet consumed
-- Next: Complete testing and tag v0.2.0
+**Current Release**: v0.7.0 (Beta 3) ✅
+- Event bus integrated (aw::tobus)
+- Live console with colored logs
+- Unread badge on Console tab
+- Batch UI publishes events (ProgressEvent, FileFinishedEvent, BatchCompletedEvent)
+- Next: Beta 4 - Cancellation token + progress bar
 
 ---
 

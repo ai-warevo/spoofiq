@@ -6,12 +6,15 @@
 #include <filesystem>
 #include <string>
 #include <vector>
+#include <atomic>
+#include <thread>
 
 namespace aw::spoofiq::ui {
 
 class BatchSpooferPanel : public IPanel {
 public:
     explicit BatchSpooferPanel();
+    ~BatchSpooferPanel();
     
     PanelId id() const override { return PanelId::BatchSpoofer; }
     std::string name() const override { return "Batch Spoofer"; }
@@ -22,13 +25,23 @@ private:
     std::string input_paths_buffer_;
     std::string output_dir_;
     std::string status_message_;
-    bool processing_ = false;
+    std::atomic<bool> processing_{false};
+    
+    // Progress tracking (atomic for thread-safe access)
+    std::atomic<int> total_files_{0};
+    std::atomic<int> processed_count_{0};
+    std::atomic<float> progress_percent_{0.0f};
     
     // Image processing
     core::ExifData exif_data_;
-    int next_index_ = 1;
+    std::atomic<int> next_index_{1};
+    std::atomic<bool> cancel_flag_{false};
+    
+    // Worker thread
+    std::thread worker_thread_;
     
     void process_batch();
+    void process_batch_worker(std::vector<std::filesystem::path> input_files, std::filesystem::path output_dir);
 };
 
 } // namespace aw::spoofiq::ui
