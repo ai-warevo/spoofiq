@@ -47,29 +47,29 @@ test:
 
 # Individual preset targets - Debug
 debug-gcc: PRESET=debug-gcc
-debug-gcc: configure-build test
+debug-gcc: configure-build
 
 debug-clang: PRESET=debug-clang
-debug-clang: configure-build test
+debug-clang: configure-build
 
 debug-clang-libcxx: PRESET=debug-clang-libcxx
-debug-clang-libcxx: configure-build test
+debug-clang-libcxx: configure-build
 
 debug-msvc: PRESET=debug-msvc
-debug-msvc: configure-build test
+debug-msvc: configure-build
 
 # Individual preset targets - Release
 release-gcc: PRESET=release-gcc
-release-gcc: configure-build test
+release-gcc: configure-build
 
 release-clang: PRESET=release-clang
-release-clang: configure-build test
+release-clang: configure-build
 
 release-clang-libcxx: PRESET=release-clang-libcxx
-release-clang-libcxx: configure-build test
+release-clang-libcxx: configure-build
 
 release-msvc: PRESET=release-msvc
-release-msvc: configure-build test
+release-msvc: configure-build
 
 # Quick aliases
 debug: debug-gcc

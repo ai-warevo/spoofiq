@@ -91,7 +91,7 @@
       "name": "debug-msvc",
       "displayName": "Debug - MSVC",
       "binaryDir": "${sourceDir}/build/Debug-msvc",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Visual Studio 18 2026",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       },
@@ -105,7 +105,7 @@
       "name": "release-msvc",
       "displayName": "Release - MSVC",
       "binaryDir": "${sourceDir}/build/Release-msvc",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Visual Studio 18 2026",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       },

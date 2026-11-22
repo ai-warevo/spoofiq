@@ -112,8 +112,12 @@ void BatchSpooferPanel::process_single_file() {
         return;
     }
     
+    // Generate output filename: IMG_0001.jpg
+    std::string filename = std::format("IMG_{:04d}.jpg", next_index_);
+    std::filesystem::path output_file = output / filename;
+    
     // Process
-    auto result = proc::ImageProcessor::process(input, output, exif_data_, next_index_);
+    auto result = proc::ImageProcessor::process(input, output_file, exif_data_);
     
     if (!result) {
         status_message_ = std::format("Error: {}", result.error());
@@ -121,7 +125,7 @@ void BatchSpooferPanel::process_single_file() {
         return;
     }
     
-    status_message_ = std::format("Success! Created: {}", result.value().filename().string());
+    status_message_ = std::format("Success! Created: {}", filename);
     next_index_++;
     processing_ = false;
 }

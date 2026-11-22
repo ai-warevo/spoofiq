@@ -54,16 +54,16 @@ std::vector<uint8_t> MetadataIO::build_exif_blob(const core::ExifData& exif) {
     // Make (ASCII)
     write_u16_le(ifd0_data, TAG_MAKE);
     write_u16_le(ifd0_data, TYPE_ASCII);
-    write_u32_le(ifd0_data, exif.make.size() + 1);
-    write_u32_le(ifd0_data, data_offset + data_area.size());
+    write_u32_le(ifd0_data, static_cast<uint32_t>(exif.make.size()) + 1);
+    write_u32_le(ifd0_data, data_offset + static_cast<uint32_t>(data_area.size()));
     data_area.insert(data_area.end(), exif.make.begin(), exif.make.end());
     data_area.push_back(0);
     
     // Model (ASCII)
     write_u16_le(ifd0_data, TAG_MODEL);
     write_u16_le(ifd0_data, TYPE_ASCII);
-    write_u32_le(ifd0_data, exif.model.size() + 1);
-    write_u32_le(ifd0_data, data_offset + data_area.size());
+    write_u32_le(ifd0_data, static_cast<uint32_t>(exif.model.size()) + 1);
+    write_u32_le(ifd0_data, data_offset + static_cast<uint32_t>(data_area.size()));
     data_area.insert(data_area.end(), exif.model.begin(), exif.model.end());
     data_area.push_back(0);
     
@@ -77,13 +77,13 @@ std::vector<uint8_t> MetadataIO::build_exif_blob(const core::ExifData& exif) {
     // Software (ASCII)
     write_u16_le(ifd0_data, TAG_SOFTWARE);
     write_u16_le(ifd0_data, TYPE_ASCII);
-    write_u32_le(ifd0_data, exif.software.size() + 1);
-    write_u32_le(ifd0_data, data_offset + data_area.size());
+    write_u32_le(ifd0_data, static_cast<uint32_t>(exif.software.size()) + 1);
+    write_u32_le(ifd0_data, data_offset + static_cast<uint32_t>(data_area.size()));
     data_area.insert(data_area.end(), exif.software.begin(), exif.software.end());
     data_area.push_back(0);
     
     // ExifOffset placeholder
-    uint32_t exif_ifd_offset = data_offset + data_area.size();
+    uint32_t exif_ifd_offset = data_offset + static_cast<uint32_t>(data_area.size());
     write_u16_le(ifd0_data, TAG_EXIF_OFFSET);
     write_u16_le(ifd0_data, 4);
     write_u32_le(ifd0_data, 1);
@@ -121,7 +121,7 @@ std::vector<uint8_t> MetadataIO::inject_exif_into_jpeg(
     result.push_back(0xFF);
     result.push_back(0xE1);
     
-    uint16_t app1_length = 2 + exif_blob.size();
+    uint16_t app1_length = 2 + static_cast<uint16_t>(exif_blob.size());
     result.push_back((app1_length >> 8) & 0xFF);
     result.push_back(app1_length & 0xFF);
     

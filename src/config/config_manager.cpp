@@ -2,6 +2,7 @@
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <sstream>
+#include <cstdlib>
 
 namespace aw::spoofiq {
 
@@ -59,12 +60,22 @@ void from_json(const nlohmann::json& j, AppSettings& s) {
 
 std::filesystem::path ConfigManager::get_config_dir() {
 #ifdef _WIN32
-    const char* appdata = std::getenv("APPDATA");
-    if (!appdata) {
-        const char* userprofile = std::getenv("USERPROFILE");
-        return std::filesystem::path(userprofile ? userprofile : ".") / "AppData" / "Roaming";
+    char* appdata = nullptr;
+    size_t len = 0;
+    if (_dupenv_s(&appdata, &len, "APPDATA") == 0 && appdata != nullptr) {
+        std::filesystem::path result(appdata);
+        free(appdata);
+        return result;
     }
-    return std::filesystem::path(appdata);
+    
+    char* userprofile = nullptr;
+    if (_dupenv_s(&userprofile, &len, "USERPROFILE") == 0 && userprofile != nullptr) {
+        std::filesystem::path result = std::filesystem::path(userprofile) / "AppData" / "Roaming";
+        free(userprofile);
+        return result;
+    }
+    
+    return std::filesystem::path(".") / "AppData" / "Roaming";
 #else
     const char* home = std::getenv("HOME");
     return std::filesystem::path(home ? home : ".");

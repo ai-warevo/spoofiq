@@ -193,7 +193,7 @@ aw_add_library(TARGET spoofiq_core_proc_image TYPE OBJECT
     SOURCES
         src/proc/image_processor.cpp
     PUBLIC_INCLUDE_DIRS include
-    PUBLIC_LINKS spoofiq_core_types spoofiq_core_io_image)
+    PUBLIC_LINKS spoofiq_core_types spoofiq_core_io_image spoofiq_core_io_metadata)
 
 # ── Modular spoofiq_core: Processing - Video (stub) ──────────────────────────
 aw_add_library(TARGET spoofiq_core_proc_video TYPE OBJECT
