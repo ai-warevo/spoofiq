@@ -144,9 +144,8 @@ endif()
 #    FetchContent_MakeAvailable(taglib)
 #endif()
 
-# nativefiledialog-extended (v1.2.1) - Used in Beta 3
-# DISABLED FOR NOW - requires GTK3 on Linux
-# Will be properly integrated in Beta 3
+# nativefiledialog-extended (v1.2.1) - Beta 3 (requires GTK3)
+# DISABLED - GTK3 not available in environment
 #if(NOT TARGET nfd)
 #    FetchContent_Declare(
 #        nativefiledialog
@@ -209,18 +208,6 @@ aw_add_library(TARGET spoofiq_core_config TYPE OBJECT
     PUBLIC_INCLUDE_DIRS include
     PUBLIC_LINKS spoofiq_core_types nlohmann_json::nlohmann_json)
 
-# ── Modular spoofiq_core: Batch Orchestrator (Beta 2) ────────────────────────
-aw_add_library(TARGET spoofiq_core_proc_batch TYPE OBJECT
-    SOURCES
-        src/proc/batch_orchestrator.cpp
-    PUBLIC_INCLUDE_DIRS include
-    PUBLIC_LINKS 
-        spoofiq_core_types 
-        spoofiq_core_proc_image 
-        spoofiq_core_proc_video
-        spoofiq_core_logging
-        aw::tpl)
-
 # ── Modular spoofiq_core: Logging (Beta 1) ───────────────────────────────────
 aw_add_library(TARGET spoofiq_core_logging TYPE OBJECT
     SOURCES
@@ -245,7 +232,6 @@ aw_add_library(TARGET spoofiq_core TYPE STATIC ALIAS aw::spoofiq::core
         spoofiq_core_io_image
         spoofiq_core_proc_image
         spoofiq_core_proc_video
-        spoofiq_core_proc_batch
         spoofiq_core_config
         spoofiq_core_logging
         spoofiq_core_legacy

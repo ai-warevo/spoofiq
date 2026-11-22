@@ -1,11 +1,12 @@
 #include <aw/spoofiq/ui/panels/batch_spoofer_panel.hpp>
 #include <imgui.h>
 #include <format>
+#include <sstream>
 
 namespace aw::spoofiq::ui {
 
 BatchSpooferPanel::BatchSpooferPanel()
-    : input_path_(256, '\0')
+    : input_paths_buffer_(4096, '\0')
     , output_dir_(256, '\0') {
     
     // Default output directory
@@ -21,12 +22,9 @@ void BatchSpooferPanel::render() {
     
     ImGui::Spacing();
     
-    // Input file path
-    ImGui::Text("Input Image:");
-    ImGui::SetNextItemWidth(-1);
-    ImGui::InputText("##input", input_path_.data(), input_path_.capacity());
-    ImGui::SameLine();
-    ImGui::Text("(Supports: JPG, PNG, BMP, TIF, etc.)");
+    // Input files (manual list entry)
+    ImGui::Text("Input Files (one per line):");
+    ImGui::InputTextMultiline("##input", input_paths_buffer_.data(), input_paths_buffer_.capacity(), ImVec2(-1, 100));
     
     ImGui::Spacing();
     
@@ -64,8 +62,8 @@ void BatchSpooferPanel::render() {
     
     // Process button
     ImGui::BeginDisabled(processing_);
-    if (ImGui::Button("Process Image", ImVec2(200, 40))) {
-        process_single_file();
+    if (ImGui::Button("Process Batch", ImVec2(200, 40))) {
+        process_batch();
     }
     ImGui::EndDisabled();
     
@@ -89,19 +87,27 @@ void BatchSpooferPanel::render() {
     ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Next Index: IMG_%04d.jpg", next_index_);
 }
 
-void BatchSpooferPanel::process_single_file() {
+void BatchSpooferPanel::process_batch() {
     processing_ = true;
-    status_message_ = "Processing...";
+    status_message_ = "Processing batch...";
     
-    std::filesystem::path input(input_path_.c_str());
-    std::filesystem::path output(output_dir_.c_str());
+    // Parse input paths (one per line)
+    std::vector<std::filesystem::path> input_files;
+    std::string line;
+    std::istringstream stream(input_paths_buffer_);
+    while (std::getline(stream, line)) {
+        if (!line.empty()) {
+            input_files.emplace_back(line);
+        }
+    }
     
-    // Validation
-    if (!std::filesystem::exists(input)) {
-        status_message_ = std::format("Error: Input file not found: {}", input.string());
+    if (input_files.empty()) {
+        status_message_ = "Error: No input files provided";
         processing_ = false;
         return;
     }
+    
+    std::filesystem::path output(output_dir_.c_str());
     
     // Create output directory
     try {
@@ -112,21 +118,42 @@ void BatchSpooferPanel::process_single_file() {
         return;
     }
     
-    // Generate output filename: IMG_0001.jpg
-    std::string filename = std::format("IMG_{:04d}.jpg", next_index_);
-    std::filesystem::path output_file = output / filename;
+    // Process each file
+    int success_count = 0;
+    int error_count = 0;
+    std::string last_error;
     
-    // Process
-    auto result = proc::ImageProcessor::process(input, output_file, exif_data_);
-    
-    if (!result) {
-        status_message_ = std::format("Error: {}", result.error());
-        processing_ = false;
-        return;
+    for (const auto& input : input_files) {
+        if (!std::filesystem::exists(input)) {
+            last_error = std::format("Not found: {}", input.string());
+            error_count++;
+            continue;
+        }
+        
+        // Generate output filename: IMG_XXXX.jpg
+        std::string filename = std::format("IMG_{:04d}.jpg", next_index_);
+        std::filesystem::path output_file = output / filename;
+        
+        // Process
+        auto result = proc::ImageProcessor::process(input, output_file, exif_data_);
+        
+        if (!result) {
+            last_error = result.error();
+            error_count++;
+        } else {
+            success_count++;
+            next_index_++;
+        }
     }
     
-    status_message_ = std::format("Success! Created: {}", filename);
-    next_index_++;
+    // Final status
+    if (error_count == 0) {
+        status_message_ = std::format("✓ All {} files processed successfully", success_count);
+    } else {
+        status_message_ = std::format("Processed: {} success, {} errors. Last error: {}", 
+                                     success_count, error_count, last_error);
+    }
+    
     processing_ = false;
 }
 

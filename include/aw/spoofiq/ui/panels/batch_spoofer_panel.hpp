@@ -19,7 +19,7 @@ public:
 
 private:
     // UI state
-    std::string input_path_;
+    std::string input_paths_buffer_;
     std::string output_dir_;
     std::string status_message_;
     bool processing_ = false;
@@ -28,7 +28,7 @@ private:
     core::ExifData exif_data_;
     int next_index_ = 1;
     
-    void process_single_file();
+    void process_batch();
 };
 
 } // namespace aw::spoofiq::ui
