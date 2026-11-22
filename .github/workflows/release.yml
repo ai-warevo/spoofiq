@@ -1,0 +1,35 @@
+# Release — promote changelog and publish GitHub Release
+#
+# Triggered on:
+#   - Tag push (v*)
+#   - Manual workflow_dispatch for dry-run or override version
+#
+# Delegates to reusable-release.yml for version derivation, changelog promotion,
+# and release publication.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version override (X.Y.Z); use auto to derive from CHANGELOG.md'
+        required: false
+        default: auto
+        type: string
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  release:
+    uses: ai-warevo/.github/.github/workflows/reusable-release.yml@main
+    with:
+      version: ${{ inputs.version || 'auto' }}
+    permissions:
+      contents: write
+      actions: write

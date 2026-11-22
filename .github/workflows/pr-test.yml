@@ -1,0 +1,35 @@
+# PR Test - fast unit tests on every pull request
+#
+# Triggers: pull_request and push to main/master
+# Calls: reusable-matrix.yml from ai-warevo/.github
+#
+# This workflow runs a fast Debug unit test suite across the primary toolchains
+# (clang-18/libc++ and gcc-15), keeping feedback time to <10 minutes.
+
+name: PR Test
+
+on:
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    uses: ai-warevo/.github/.github/workflows/reusable-matrix.yml@main
+    with:
+      source_dir: .
+      build_dir: build
+      container_image: ghcr.io/ai-warevo/ci-cpp23
+      linux_toolchains: '["clang18-libcxx", "gcc15"]'
+      build_types: '["Debug"]'
+      enable_windows: false
+      cmake_extra_args_linux: >-
+        -DSPOOFIQ_BUILD_TESTS=ON
+        -DSPOOFIQ_WARNINGS_AS_ERRORS=ON
+      ctest_timeout: 120

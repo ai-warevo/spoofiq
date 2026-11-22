@@ -1,0 +1,46 @@
+# Weekly Deep — sanitizers + coverage (scheduled + manual)
+#
+# Triggers: scheduled weekly on Monday 00:00 UTC, or manual (workflow_dispatch)
+# Calls: reusable-sanitizers.yml, reusable-coverage-badge.yml from ai-warevo/.github
+#
+# This workflow runs the comprehensive test suite:
+#   - ASan + UBSan (full test suite in container)
+#   - TSan (full test suite + 30x stress repeats on host)
+#   - Coverage (gcovr → badge → GitHub Pages)
+
+name: Weekly Deep
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # every Monday at 00:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  sanitizers:
+    uses: ai-warevo/.github/.github/workflows/reusable-sanitizers.yml@main
+    with:
+      source_dir: .
+      build_dir: build
+      container_image: ghcr.io/ai-warevo/ci-cpp23
+      cmake_sanitize_var: AW_SANITIZE
+      cmake_extra_args: '-DSPOOFIQ_BUILD_TESTS=ON -DSPOOFIQ_WARNINGS_AS_ERRORS=ON'
+      ctest_timeout: 300
+      tsan_repeat_count: 30
+      tsan_test_regex: ''
+      asan_options: 'detect_leaks=1:halt_on_error=1'
+      tsan_options: 'halt_on_error=1:second_deadlock_stack=1'
+
+  coverage:
+    uses: ai-warevo/.github/.github/workflows/reusable-coverage-badge.yml@main
+    with:
+      source_dir: .
+      build_dir: build
+      container_image: ghcr.io/ai-warevo/ci-cpp23
+      toolchain: gcc15
+      cmake_extra_args: '-D{{CMAKE_NAMESPACE}}_BUILD_TESTS=ON -DAW_ENABLE_COVERAGE=ON'
+      gcovr_source_filter: ''
+      gcovr_exclude: '.*/_deps/.* examples/.*'

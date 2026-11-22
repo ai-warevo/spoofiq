@@ -1,0 +1,120 @@
+# clang-tidy configuration for aw::template_cpp (C++23 header + source files)
+# Approach: * (all checks) minus exclusions — similar to nlohmann/json.
+# This catches new bugs automatically as LLVM adds new checks.
+#
+# Run locally: clang-tidy -p build/dev <file>
+# CI uses the narrow set in .github/workflows/ci.yml for speed.
+
+# YAML list format: each item is processed in order.
+# -*  → disable all checks
+# *   → enable all checks
+# -check → disable specific checks (must come after *)
+Checks:
+  - '-*'
+  - '*'
+  # --- Explicit inclusions (now as documentation; already enabled via '*') ---
+  # Bug detection: bugprone-*, cppcoreguidelines-avoid-capturing-lambda-coroutines,
+  #   cppcoreguidelines-avoid-reference-coroutine-parameters,
+  #   cppcoreguidelines-missing-std-forward, cppcoreguidelines-slicing
+  # Modern C++: modernize-use-nodiscard, modernize-use-override, modernize-use-using
+  # Performance: performance-*
+  # Readability: readability-container-size-empty, readability-redundant-member-init
+  # --- Exclusions: noise for header-only / library code ---
+  # Variadic templates trigger false positives
+  - '-bugprone-easily-swappable-parameters'
+  # Not applicable to C++ RAII patterns
+  - '-bugprone-exception-escape'
+  # False positives on std::optional
+  - '-bugprone-unchecked-optional-access'
+  # --- Exclusions: not applicable to our project ---
+  # libc certification checks (we are not a libc implementation)
+  - '-llvmlibc-*'
+  # CERT certification (too strict for a library)
+  - '-cert-*'
+  # Include cleaner: false positives on transitive includes
+  - '-misc-include-cleaner'
+  # Trailing return type: we prefer explicit return types for readability
+  - '-modernize-use-trailing-return-type'
+  # Identifier length: h, st, hw, cb, id are standard abbreviations
+  - '-readability-identifier-length'
+  # Non-const global: thread_local is intentional for pool context
+  - '-cppcoreguidelines-avoid-non-const-global-variables'
+  # Internal linkage: public API functions must be externally visible
+  - '-misc-use-internal-linkage'
+  # Special member functions: delete copy + non-default dtor = no move (intentional for RAII)
+  - '-cppcoreguidelines-special-member-functions'
+  - '-hicpp-special-member-functions'
+  # Style: braces, named params (we use short one-line ifs)
+  - '-hicpp-braces-around-statements'
+  - '-google-readability-braces-around-statements'
+  - '-readability-braces-around-statements'
+  - '-hicpp-named-parameter'
+  - '-readability-named-parameter'
+  # Altera / Fuchsia / Android specific (embedded / OS checks, not applicable)
+  # (redundant sub-checks removed: all covered by -altera-*, -fuchsia-*, and -android-*)
+  - '-altera-*'
+  - '-fuchsia-*'
+  - '-android-*'
+  # Header guard: standard include guards (AW_<PROJECT>_<PATH>_HPP)
+  - '-llvm-header-guard'
+  # Non-private member variables: detail structs have public fields by design
+  - '-misc-non-private-member-variables-in-classes'
+  # Const-correctness: false positives on lock_guard / scoped_lock (can't be const)
+  - '-misc-const-correctness'
+  # Member functions: static suggestion is noise on awaiter structs
+  - '-readability-convert-member-functions-to-static'
+  # Include order: we use explicit grouping (own header, aw/, then <std>)
+  - '-llvm-include-order'
+  # Explicit conversions: we allow implicit upcast like C# (Task<T> → Task<void>)
+  - '-hicpp-explicit-conversions'
+  - '-google-explicit-constructor'
+  # Cognitive complexity: when_all is inherently complex (32 vs threshold 25)
+  - '-readability-function-cognitive-complexity'
+  # --- tobus-specific exclusions ---
+  # Empty catch: dispatcher error handling intentionally swallows exceptions
+  - '-bugprone-empty-catch'
+  # Magic numbers: binary serialization uses literal byte offsets (8, 0xff, 7)
+  - '-cppcoreguidelines-avoid-magic-numbers'
+  - '-readability-magic-numbers'
+  # Use constraints: binary traits use enable_if for partial specialization
+  - '-modernize-use-constraints'
+  # Signed bitwise: intentional for varint encoding
+  - '-hicpp-signed-bitwise'
+  # Init variables: binary deserialization reads into uninitialized variable
+  - '-cppcoreguidelines-init-variables'
+  # Pointer arithmetic: binary buffer access requires pointer arithmetic
+  - '-cppcoreguidelines-pro-bounds-pointer-arithmetic'
+  # TODO format: placeholder stubs for future transport implementations
+  - '-google-readability-todo'
+  # String view data usage: dlsym requires C-string, not applicable
+  - '-bugprone-suspicious-stringview-data-usage'
+  # MT-unsafe: startup code, not multi-threaded
+  - '-concurrency-mt-unsafe'
+  # Constant array index: validated access
+  - '-cppcoreguidelines-pro-bounds-constant-array-index'
+  # Abseil string find: standard library idiom, no abseil dependency
+  - '-abseil-string-find-str-contains'
+  # Reinterpret cast: function pointer casts from dlsym are unavoidable
+  - '-cppcoreguidelines-pro-type-reinterpret-cast'
+  # --- tpl-specific exclusions (also applicable to tobus coroutines) ---
+  # Const/ref data members: awaiter lifetime semantics require reference storage (task_group_awaiter)
+  - '-cppcoreguidelines-avoid-const-or-ref-data-members'
+  # Unnecessary value param: move semantics pattern in co_spawn (TaskGroup copied for RAII release)
+  - '-performance-unnecessary-value-param'
+  # --- Additional exclusions for transport/serialization code ---
+  # Designated initializers: aggregate init of network structs (Frame, Entry, Address, timeval, HttpResponse)
+  - '-modernize-use-designated-initializers'
+  # Branch clone: transport selection switch has identical branches by design
+  - '-bugprone-branch-clone'
+  # Implicit widening: acceptable for literal size calculations in http_bus
+  - '-bugprone-implicit-widening-of-multiplication-result'
+  # Redundant expression: false positive on HTTP response validation
+  - '-misc-redundant-expression'
+  # Nested conditional: nested ternary acceptable for protocol encoding logic
+  - '-readability-avoid-nested-conditional-operator'
+  # Isolate declarations: multiple declarations for clarity (HTTP request parsing)
+  - '-readability-isolate-declaration'
+
+WarningsAsErrors: '*'
+HeaderFilterRegex: '^(include|src)/'
+FormatStyle: file
