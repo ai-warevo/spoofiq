@@ -1,4 +1,5 @@
 #include <aw/spoofiq/ui/panels/batch_spoofer_panel.hpp>
+#include <aw/spoofiq/ui/error_dialog.hpp>
 #include <aw/spoofiq/io/image_io.hpp>
 #include <aw/spoofiq/io/metadata_io.hpp>
 #include <aw/spoofiq/logger.hpp>
@@ -228,13 +229,25 @@ void BatchSpooferPanel::process_batch() {
         return;
     }
     
-    // Gather input files
-    std::vector<std::filesystem::path> input_files;
-    if (!std::filesystem::exists(input_folder_)) {
-        status_message_ = "Input folder does not exist: " + input_folder_;
+    // Validation: check input folder
+    if (input_folder_.empty()) {
+        ErrorDialog::show("Input Error", "Please select an input folder");
         return;
     }
     
+    if (!std::filesystem::exists(input_folder_)) {
+        ErrorDialog::show("Input Error", std::format("Input folder does not exist:\n{}", input_folder_));
+        return;
+    }
+    
+    // Validation: check preset selected
+    if (selected_preset_idx_ < 0 || selected_preset_idx_ >= static_cast<int>(available_presets_.size())) {
+        ErrorDialog::show("Preset Error", "Please select a device preset");
+        return;
+    }
+    
+    // Gather input files
+    std::vector<std::filesystem::path> input_files;
     for (const auto& entry : std::filesystem::directory_iterator(input_folder_)) {
         if (!entry.is_regular_file()) continue;
         
@@ -246,7 +259,7 @@ void BatchSpooferPanel::process_batch() {
     }
     
     if (input_files.empty()) {
-        status_message_ = "No supported image files found in folder";
+        ErrorDialog::show("Input Error", "No supported image files found in folder.\nSupported: .jpg, .jpeg, .png, .bmp, .tif, .tiff");
         return;
     }
     

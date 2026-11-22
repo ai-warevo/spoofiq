@@ -28,18 +28,18 @@ TEST_CASE("AppSettings JSON serialization", "[config]") {
     settings.last_input_directory = "/test";
     settings.export_to_subfolder = true;
     settings.subfolder_name = "out";
-    settings.start_index = 42;
+    settings.manual_start_index = 42;
     settings.presets = {
         {"id1", "Name1", "Make1", "Model1", "OS1", "Lens1", 1.0f, 2.0f, 3.0f, 50, 37.0, -122.0}
     };
     
     json j = settings;
-    REQUIRE(j["start_index"] == 42);
+    REQUIRE(j["manual_start_index"] == 42);
     REQUIRE(j["export_to_subfolder"] == true);
     REQUIRE(j["presets"].size() == 1);
     
     AppSettings loaded = j.get<AppSettings>();
-    REQUIRE(loaded.start_index == 42);
+    REQUIRE(loaded.manual_start_index == 42);
     REQUIRE(loaded.subfolder_name == "out");
     REQUIRE(loaded.presets[0].id == "id1");
 }

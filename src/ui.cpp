@@ -2,6 +2,7 @@
 #include <aw/spoofiq/config.hpp>
 #include <aw/spoofiq/core/types.hpp>
 #include <aw/spoofiq/ui/panels/console_panel.hpp>
+#include <aw/spoofiq/ui/error_dialog.hpp>
 #include <format>
 
 #include <imgui.h>
@@ -107,6 +108,9 @@ void UiRoot::render() {
         ImGui::PopStyleVar(3);
     }
     ImGui::End();
+    
+    // Render error dialog
+    ui::ErrorDialog::render();
 }
 
 } // namespace aw::spoofiq

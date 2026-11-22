@@ -253,6 +253,7 @@ endif()
 aw_add_library(TARGET spoofiq_ui TYPE STATIC ALIAS aw::spoofiq::ui
     SOURCES
         src/ui.cpp
+        src/ui/error_dialog.cpp
         src/ui/panels/batch_spoofer_panel.cpp
         src/ui/panels/presets_panel.cpp
         src/ui/panels/console_panel.cpp
