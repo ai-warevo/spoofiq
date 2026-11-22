@@ -1,266 +1,374 @@
 #include <aw/spoofiq/ui/panels/batch_spoofer_panel.hpp>
-#include <aw/spoofiq/event_bus_manager.hpp>
-#include <aw/spoofiq/core/events.hpp>
+#include <aw/spoofiq/io/image_io.hpp>
+#include <aw/spoofiq/io/metadata_io.hpp>
+#include <aw/spoofiq/logger.hpp>
+#include <aw/tobus/tobus.hpp>
 #include <imgui.h>
 #include <format>
+#include <fstream>
 #include <sstream>
+#include <algorithm>
 
 namespace aw::spoofiq::ui {
 
-BatchSpooferPanel::BatchSpooferPanel()
-    : input_paths_buffer_(4096, '\0')
-    , output_dir_(256, '\0') {
-    
-    // Default output directory
-    output_dir_ = "./spoofiq_output";
-    
-    // Default iPhone 16 Pro Max metadata
-    exif_data_ = core::ExifData{}; // uses defaults from struct
+BatchSpooferPanel::BatchSpooferPanel() {
+    // Load settings from config
+    if (auto result = ConfigManager::load()) {
+        settings_ = std::move(*result);
+        input_folder_ = settings_.last_input_directory;
+        refresh_preset_list();
+        Logger::info("Loaded config: {} presets available", settings_.presets.size());
+    } else {
+        Logger::error("Failed to load config: {}", result.error());
+        settings_ = {}; // use empty settings
+    }
 }
 
 BatchSpooferPanel::~BatchSpooferPanel() {
-    // Signal cancellation and wait for worker to finish
-    cancel_flag_.store(true, std::memory_order_release);
+    cancel_flag_ = true;
     if (worker_thread_.joinable()) {
         worker_thread_.join();
     }
+}
+
+void BatchSpooferPanel::refresh_preset_list() {
+    available_presets_.clear();
+    for (const auto& preset : settings_.presets) {
+        available_presets_.push_back(preset.name);
+    }
+    
+    // Find selected preset index
+    selected_preset_idx_ = 0;
+    for (size_t i = 0; i < settings_.presets.size(); ++i) {
+        if (settings_.presets[i].id == settings_.selected_preset_id) {
+            selected_preset_idx_ = static_cast<int>(i);
+            break;
+        }
+    }
+}
+
+int BatchSpooferPanel::find_next_index(const std::filesystem::path& output_dir) {
+    if (!std::filesystem::exists(output_dir)) {
+        return 1;
+    }
+    
+    int max_index = 0;
+    for (const auto& entry : std::filesystem::directory_iterator(output_dir)) {
+        if (!entry.is_regular_file()) continue;
+        
+        std::string filename = entry.path().stem().string();
+        if (filename.starts_with("IMG_") && filename.length() == 8) {
+            if (int idx = std::stoi(filename.substr(4)); idx > max_index) {
+                max_index = idx;
+            }
+        }
+    }
+    
+    return max_index + 1;
 }
 
 void BatchSpooferPanel::render() {
-    ImGui::Text("Batch Spoofer v" APP_VERSION);
+    ImGui::Text("1. Source & Export:");
     ImGui::Separator();
     
-    ImGui::Spacing();
+    // Input folder
+    ImGui::Text("Folder:");
+    ImGui::SameLine();
+    char folder_buf[512];
+    std::strncpy(folder_buf, input_folder_.c_str(), sizeof(folder_buf) - 1);
+    folder_buf[sizeof(folder_buf) - 1] = '\0';
+    if (ImGui::InputText("##input_folder", folder_buf, sizeof(folder_buf))) {
+        input_folder_ = folder_buf;
+        settings_.last_input_directory = input_folder_;
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Browse...")) {
+        status_message_ = "File browser not yet implemented (nfd stub)";
+    }
     
-    bool is_processing = processing_.load(std::memory_order_relaxed);
-    
-    // Input files (manual list entry)
-    ImGui::Text("Input Files (one per line):");
-    ImGui::BeginDisabled(is_processing);
-    ImGui::InputTextMultiline("##input", input_paths_buffer_.data(), input_paths_buffer_.capacity(), ImVec2(-1, 100));
-    ImGui::EndDisabled();
-    
-    ImGui::Spacing();
-    
-    // Output directory
-    ImGui::Text("Output Directory:");
-    ImGui::SetNextItemWidth(-1);
-    ImGui::BeginDisabled(is_processing);
-    ImGui::InputText("##output", output_dir_.data(), output_dir_.capacity());
-    ImGui::EndDisabled();
-    
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-    
-    // Metadata display (read-only for MVP)
-    ImGui::Text("Metadata (hardcoded for MVP):");
-    ImGui::BeginChild("MetadataPreview", ImVec2(0, 150), true);
-    ImGui::TextColored(ImVec4(0.22f, 0.74f, 0.97f, 1.0f), "Device:");
-    ImGui::Text("  Make: %s", exif_data_.make.c_str());
-    ImGui::Text("  Model: %s", exif_data_.model.c_str());
-    ImGui::Text("  Software: iOS %s", exif_data_.software.c_str());
-    
-    ImGui::Spacing();
-    ImGui::TextColored(ImVec4(0.22f, 0.74f, 0.97f, 1.0f), "Camera:");
-    ImGui::Text("  F-Number: f/%.2f", exif_data_.fnumber);
-    ImGui::Text("  ISO: %d", exif_data_.iso_speed);
-    ImGui::Text("  Focal Length: %.2fmm", exif_data_.focal_length);
-    ImGui::Text("  Lens: %s", exif_data_.lens_model.c_str());
-    
-    ImGui::Spacing();
-    ImGui::TextColored(ImVec4(0.22f, 0.74f, 0.97f, 1.0f), "Location:");
-    ImGui::Text("  GPS: 37°20'5\"N 122°0'32\"W");
-    ImGui::Text("  Altitude: 30m");
-    ImGui::EndChild();
-    
-    ImGui::Spacing();
-    
-    // Process button (or Cancel if running)
-    if (is_processing) {
-        if (ImGui::Button("Cancel Batch", ImVec2(200, 40))) {
-            cancel_flag_.store(true, std::memory_order_release);
+    // Export to subfolder
+    ImGui::Checkbox("Export to subfolder:", &settings_.export_to_subfolder);
+    if (settings_.export_to_subfolder) {
+        ImGui::SameLine();
+        char subfolder_buf[256];
+        std::strncpy(subfolder_buf, settings_.subfolder_name.c_str(), sizeof(subfolder_buf) - 1);
+        subfolder_buf[sizeof(subfolder_buf) - 1] = '\0';
+        if (ImGui::InputText("##subfolder", subfolder_buf, sizeof(subfolder_buf))) {
+            settings_.subfolder_name = subfolder_buf;
         }
-    } else {
-        if (ImGui::Button("Process Batch", ImVec2(200, 40))) {
+    }
+    
+    // Skip existing + Start index
+    ImGui::Checkbox("Skip existing (IMG_XXXX)", &settings_.skip_existing_files);
+    ImGui::SameLine();
+    ImGui::Text("Start Index:");
+    ImGui::SameLine();
+    const char* index_modes[] = { "Auto-detect", "Manual" };
+    int mode = settings_.auto_detect_index ? 0 : 1;
+    if (ImGui::Combo("##index_mode", &mode, index_modes, 2)) {
+        settings_.auto_detect_index = (mode == 0);
+    }
+    if (!settings_.auto_detect_index) {
+        ImGui::SameLine();
+        ImGui::InputInt("##manual_index", &settings_.manual_start_index);
+    }
+    
+    ImGui::Spacing();
+    ImGui::Text("2. Quick Spoofing Settings:");
+    ImGui::Separator();
+    
+    // Device preset combo
+    ImGui::Text("Device Preset:");
+    ImGui::SameLine();
+    if (ImGui::BeginCombo("##preset_combo", available_presets_.empty() ? "No presets" : available_presets_[selected_preset_idx_].c_str())) {
+        for (int i = 0; i < static_cast<int>(available_presets_.size()); ++i) {
+            bool selected = (i == selected_preset_idx_);
+            if (ImGui::Selectable(available_presets_[i].c_str(), selected)) {
+                selected_preset_idx_ = i;
+                settings_.selected_preset_id = settings_.presets[i].id;
+            }
+            if (selected) {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
+    }
+    
+    // Timestamp mode
+    ImGui::Text("Timestamp:");
+    ImGui::SameLine();
+    bool current_time = settings_.use_current_time;
+    if (ImGui::RadioButton("Current Time", current_time)) {
+        settings_.use_current_time = true;
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Custom Date/Time", !current_time)) {
+        settings_.use_current_time = false;
+    }
+    
+    if (!settings_.use_current_time) {
+        ImGui::SameLine();
+        char datetime_buf[128];
+        std::strncpy(datetime_buf, settings_.custom_datetime.c_str(), sizeof(datetime_buf) - 1);
+        datetime_buf[sizeof(datetime_buf) - 1] = '\0';
+        if (ImGui::InputText("##custom_datetime", datetime_buf, sizeof(datetime_buf))) {
+            settings_.custom_datetime = datetime_buf;
+        }
+    }
+    
+    // Timestamp shift
+    ImGui::Checkbox("Shift timestamp per file:", &settings_.shift_timestamp_per_file);
+    if (settings_.shift_timestamp_per_file) {
+        ImGui::SameLine();
+        ImGui::InputInt("sec##shift_sec", &settings_.shift_seconds);
+    }
+    
+    // GPS controls
+    ImGui::Checkbox("Embed GPS", &settings_.embed_gps);
+    if (settings_.embed_gps) {
+        ImGui::SameLine();
+        ImGui::Checkbox("Randomize radius:", &settings_.randomize_gps);
+        if (settings_.randomize_gps) {
+            ImGui::SameLine();
+            ImGui::InputFloat("m##gps_radius", &settings_.gps_radius_meters, 1.0f, 10.0f, "%.1f");
+        }
+    }
+    
+    ImGui::Spacing();
+    ImGui::Text("3. Execution:");
+    ImGui::Separator();
+    
+    // Start/Cancel button
+    bool is_processing = processing_.load();
+    if (!is_processing) {
+        // Count files
+        int file_count = 0;
+        if (std::filesystem::exists(input_folder_)) {
+            for (const auto& entry : std::filesystem::directory_iterator(input_folder_)) {
+                if (entry.is_regular_file()) {
+                    auto ext = entry.path().extension().string();
+                    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+                    if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".bmp" || ext == ".tif" || ext == ".tiff") {
+                        ++file_count;
+                    }
+                }
+            }
+        }
+        
+        std::string btn_label = std::format("START BATCH PROCESSING ({} files)", file_count);
+        if (ImGui::Button(btn_label.c_str(), ImVec2(-1.0f, 0.0f))) {
             process_batch();
         }
-    }
-    
-    ImGui::SameLine();
-    
-    // Status message
-    if (!status_message_.empty()) {
-        if (status_message_.find("Success") != std::string::npos) {
-            ImGui::TextColored(ImVec4(0.4f, 0.9f, 0.4f, 1.0f), "%s", status_message_.c_str());
-        } else if (status_message_.find("Error") != std::string::npos) {
-            ImGui::TextColored(ImVec4(0.9f, 0.4f, 0.4f, 1.0f), "%s", status_message_.c_str());
-        } else if (status_message_.find("Cancelled") != std::string::npos) {
-            ImGui::TextColored(ImVec4(0.9f, 0.9f, 0.4f, 1.0f), "%s", status_message_.c_str());
-        } else {
-            ImGui::Text("%s", status_message_.c_str());
+    } else {
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
+        if (ImGui::Button("CANCEL", ImVec2(-1.0f, 0.0f))) {
+            cancel_flag_ = true;
+            Logger::warn("Batch cancelled by user");
         }
+        ImGui::PopStyleColor();
     }
     
-    ImGui::Spacing();
-    
-    // Progress bar (if processing)
-    if (is_processing) {
-        float progress = progress_percent_.load(std::memory_order_relaxed);
-        int processed = processed_count_.load(std::memory_order_relaxed);
-        int total = total_files_.load(std::memory_order_relaxed);
-        
-        ImGui::ProgressBar(progress / 100.0f, ImVec2(-1, 0));
-        ImGui::Text("File %d of %d (%.0f%%)", processed, total, progress);
+    // Progress bar
+    if (is_processing || progress_percent_ > 0.0f) {
+        float progress = progress_percent_.load();
+        int processed = processed_count_.load();
+        int total = total_files_.load();
+        std::string overlay = std::format("{} / {}", processed, total);
+        ImGui::ProgressBar(progress, ImVec2(-1.0f, 0.0f), overlay.c_str());
     }
     
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-    
-    ImGui::TextColored(ImVec4(0.7f, 0.7f, 0.7f, 1.0f), "Next Index: IMG_%04d.jpg", next_index_.load(std::memory_order_relaxed));
+    // Status
+    if (!status_message_.empty()) {
+        ImGui::TextWrapped("%s", status_message_.c_str());
+    }
 }
 
 void BatchSpooferPanel::process_batch() {
-    // Join previous worker if any
-    if (worker_thread_.joinable()) {
-        worker_thread_.join();
+    if (processing_.load()) {
+        return;
     }
     
-    processing_.store(true, std::memory_order_release);
-    cancel_flag_.store(false, std::memory_order_release);
-    status_message_ = "Processing batch...";
-    total_files_.store(0, std::memory_order_release);
-    processed_count_.store(0, std::memory_order_release);
-    progress_percent_.store(0.0f, std::memory_order_release);
-    
-    // Parse input paths (one per line)
+    // Gather input files
     std::vector<std::filesystem::path> input_files;
-    std::string line;
-    std::istringstream stream(input_paths_buffer_);
-    while (std::getline(stream, line)) {
-        if (!line.empty()) {
-            input_files.emplace_back(line);
+    if (!std::filesystem::exists(input_folder_)) {
+        status_message_ = "Input folder does not exist: " + input_folder_;
+        return;
+    }
+    
+    for (const auto& entry : std::filesystem::directory_iterator(input_folder_)) {
+        if (!entry.is_regular_file()) continue;
+        
+        auto ext = entry.path().extension().string();
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+        if (ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".bmp" || ext == ".tif" || ext == ".tiff") {
+            input_files.push_back(entry.path());
         }
     }
     
     if (input_files.empty()) {
-        status_message_ = "Error: No input files provided";
-        processing_.store(false, std::memory_order_release);
+        status_message_ = "No supported image files found in folder";
         return;
     }
     
-    std::filesystem::path output(output_dir_.c_str());
-    
-    // Create output directory
-    try {
-        std::filesystem::create_directories(output);
-    } catch (const std::exception& e) {
-        status_message_ = std::format("Error: Failed to create output dir: {}", e.what());
-        processing_.store(false, std::memory_order_release);
-        return;
+    // Determine output directory
+    std::filesystem::path output_dir = input_folder_;
+    if (settings_.export_to_subfolder) {
+        output_dir = output_dir / settings_.subfolder_name;
+        std::filesystem::create_directories(output_dir);
     }
     
-    total_files_.store(static_cast<int>(input_files.size()), std::memory_order_release);
+    // Save settings
+    if (auto result = ConfigManager::save(settings_); !result) {
+        Logger::error("Failed to save config: {}", result.error());
+    }
     
-    // Spawn worker thread
-    worker_thread_ = std::thread([this, input_files = std::move(input_files), output]() {
-        process_batch_worker(std::move(input_files), output);
+    // Reset state
+    total_files_ = static_cast<int>(input_files.size());
+    processed_count_ = 0;
+    progress_percent_ = 0.0f;
+    cancel_flag_ = false;
+    processing_ = true;
+    status_message_ = std::format("Processing {} files...", input_files.size());
+    
+    // Join previous thread if any
+    if (worker_thread_.joinable()) {
+        worker_thread_.join();
+    }
+    
+    // Start worker thread
+    worker_thread_ = std::thread([this, input_files = std::move(input_files), output_dir]() {
+        process_batch_worker(input_files, output_dir);
     });
 }
 
-void BatchSpooferPanel::process_batch_worker(
-    std::vector<std::filesystem::path> input_files,
-    std::filesystem::path output_dir
-) {
-    auto bus = EventBusManager::get();
-    int total = static_cast<int>(input_files.size());
+void BatchSpooferPanel::process_batch_worker(std::vector<std::filesystem::path> input_files, std::filesystem::path output_dir) {
+    // Find selected preset
+    if (selected_preset_idx_ < 0 || selected_preset_idx_ >= static_cast<int>(settings_.presets.size())) {
+        Logger::error("Invalid preset index: {}", selected_preset_idx_);
+        processing_ = false;
+        return;
+    }
+    
+    const auto& preset = settings_.presets[selected_preset_idx_];
+    
+    // Determine start index
+    int next_index = settings_.auto_detect_index ? find_next_index(output_dir) : settings_.manual_start_index;
+    std::atomic<int> atomic_index{next_index};
+    
+    Logger::info("Batch started: {} files, preset: {}, start index: {}", input_files.size(), preset.name, next_index);
+    
     int success_count = 0;
     int error_count = 0;
     
-    for (int i = 0; i < total; ++i) {
-        // Check cancellation
-        if (cancel_flag_.load(std::memory_order_relaxed)) {
-            bus->publish(core::BatchCancelledEvent{});
-            status_message_ = "Batch cancelled";
-            processing_.store(false, std::memory_order_release);
-            return;
+    for (size_t i = 0; i < input_files.size(); ++i) {
+        if (cancel_flag_.load()) {
+            Logger::warn("Batch cancelled after {} files", i);
+            status_message_ = std::format("Cancelled | Success: {} | Errors: {}", success_count, error_count);
+            break;
         }
         
-        const auto& input = input_files[i];
+        const auto& input_path = input_files[i];
         
-        // Update progress
-        processed_count_.store(i, std::memory_order_release);
-        progress_percent_.store((100.0f * i) / total, std::memory_order_release);
+        // Skip existing files if requested
+        int file_index = atomic_index.fetch_add(1);
+        std::string output_filename = std::format("IMG_{:04d}.jpg", file_index);
+        auto output_path = output_dir / output_filename;
         
-        // Publish progress event
-        bus->publish(core::ProgressEvent{
-            .total_files = total,
-            .processed_count = i,
-            .current_filename = input.filename().string(),
-            .progress_percent = (100.0f * i) / total
-        });
-        
-        // Check file exists
-        if (!std::filesystem::exists(input)) {
-            std::string error_msg = std::format("Not found: {}", input.string());
-            error_count++;
-            
-            bus->publish(core::FileFinishedEvent{
-                .input_filename = input.filename().string(),
-                .output_filename = "",
-                .success = false,
-                .error_message = error_msg
-            });
+        if (settings_.skip_existing_files && std::filesystem::exists(output_path)) {
+            Logger::info("Skipped existing: {}", output_filename);
+            processed_count_++;
+            progress_percent_ = static_cast<float>(processed_count_.load()) / static_cast<float>(total_files_.load());
             continue;
         }
         
-        // Generate output filename
-        int idx = next_index_.fetch_add(1, std::memory_order_relaxed);
-        std::string filename = std::format("IMG_{:04d}.jpg", idx);
-        std::filesystem::path output_file = output_dir / filename;
+        // Build metadata from preset + settings
+        core::ExifData exif;
+        exif.make = preset.make;
+        exif.model = preset.model;
+        exif.software = preset.software;
+        exif.lens_model = preset.lens_model;
+        exif.focal_length = preset.focal_length;
+        exif.fnumber = preset.f_number;
+        exif.iso_speed = preset.iso;
         
-        // Process file
-        auto result = proc::ImageProcessor::process(input, output_file, exif_data_);
-        
-        if (!result) {
-            error_count++;
-            bus->publish(core::FileFinishedEvent{
-                .input_filename = input.filename().string(),
-                .output_filename = filename,
-                .success = false,
-                .error_message = result.error()
-            });
-        } else {
-            success_count++;
-            bus->publish(core::FileFinishedEvent{
-                .input_filename = input.filename().string(),
-                .output_filename = filename,
-                .success = true,
-                .error_message = ""
-            });
+        // GPS handling
+        if (settings_.embed_gps) {
+            exif.latitude = preset.base_latitude;
+            exif.longitude = preset.base_longitude;
+            
+            // TODO: apply GPS randomization if enabled
+            if (settings_.randomize_gps && settings_.gps_radius_meters > 0.0f) {
+                // Haversine formula + random bearing stub
+                Logger::debug("GPS randomization stub (not yet implemented)");
+            }
         }
+        
+        // Timestamp handling
+        // TODO: apply timestamp modes + shift
+        if (!settings_.use_current_time && !settings_.custom_datetime.empty()) {
+            Logger::debug("Custom datetime stub: {}", settings_.custom_datetime);
+        }
+        if (settings_.shift_timestamp_per_file && settings_.shift_seconds != 0) {
+            Logger::debug("Timestamp shift stub: +{} sec", settings_.shift_seconds);
+        }
+        
+        // Process image
+        auto result = proc::ImageProcessor::process(input_path, output_path, exif);
+        if (result) {
+            ++success_count;
+            Logger::info("Processed: {} -> {}", input_path.filename().string(), output_filename);
+        } else {
+            ++error_count;
+            Logger::error("Failed: {} | {}", input_path.filename().string(), result.error());
+        }
+        
+        processed_count_++;
+        progress_percent_ = static_cast<float>(processed_count_.load()) / static_cast<float>(total_files_.load());
     }
     
-    // Final progress
-    processed_count_.store(total, std::memory_order_release);
-    progress_percent_.store(100.0f, std::memory_order_release);
-    
-    // Final status
-    if (error_count == 0) {
-        status_message_ = std::format("✓ All {} files processed successfully", success_count);
-    } else {
-        status_message_ = std::format("Processed: {} success, {} errors", success_count, error_count);
-    }
-    
-    // Publish batch completed event
-    bus->publish(core::BatchCompletedEvent{
-        .total_images = success_count,
-        .total_videos = 0,
-        .total_errors = error_count
-    });
-    
-    processing_.store(false, std::memory_order_release);
+    processing_ = false;
+    status_message_ = std::format("Batch complete | Success: {} | Errors: {}", success_count, error_count);
+    Logger::info("Batch finished: {} success, {} errors", success_count, error_count);
 }
 
 } // namespace aw::spoofiq::ui

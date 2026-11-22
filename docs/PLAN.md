@@ -2,12 +2,12 @@
 
 ## Status
 
-**Current Release**: v0.7.0 (Beta 3) ✅
-- Event bus integrated (aw::tobus)
-- Live console with colored logs
-- Unread badge on Console tab
-- Batch UI publishes events (ProgressEvent, FileFinishedEvent, BatchCompletedEvent)
-- Next: Beta 4 - Cancellation token + progress bar
+**Current Release**: v0.8.0-beta4 ✅
+- Cancellation token + Cancel button
+- Progress bar with file count and percentage
+- Thread-safe atomic updates
+- Events still published to console
+- Next: RC 1 (v0.8.0) - GPS randomization, timestamps
 
 ---
 

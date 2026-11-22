@@ -43,7 +43,17 @@ void to_json(nlohmann::json& j, const AppSettings& s) {
         {"last_input_directory", s.last_input_directory},
         {"export_to_subfolder", s.export_to_subfolder},
         {"subfolder_name", s.subfolder_name},
-        {"start_index", s.start_index},
+        {"skip_existing_files", s.skip_existing_files},
+        {"auto_detect_index", s.auto_detect_index},
+        {"manual_start_index", s.manual_start_index},
+        {"selected_preset_id", s.selected_preset_id},
+        {"use_current_time", s.use_current_time},
+        {"custom_datetime", s.custom_datetime},
+        {"shift_timestamp_per_file", s.shift_timestamp_per_file},
+        {"shift_seconds", s.shift_seconds},
+        {"embed_gps", s.embed_gps},
+        {"randomize_gps", s.randomize_gps},
+        {"gps_radius_meters", s.gps_radius_meters},
         {"presets", s.presets}
     };
 }
@@ -52,7 +62,17 @@ void from_json(const nlohmann::json& j, AppSettings& s) {
     s.last_input_directory = j.value("last_input_directory", ".");
     s.export_to_subfolder = j.value("export_to_subfolder", false);
     s.subfolder_name = j.value("subfolder_name", "spoofiq_output");
-    s.start_index = j.value("start_index", 1);
+    s.skip_existing_files = j.value("skip_existing_files", false);
+    s.auto_detect_index = j.value("auto_detect_index", true);
+    s.manual_start_index = j.value("manual_start_index", 1);
+    s.selected_preset_id = j.value("selected_preset_id", "iphone_16_pro_max");
+    s.use_current_time = j.value("use_current_time", true);
+    s.custom_datetime = j.value("custom_datetime", "");
+    s.shift_timestamp_per_file = j.value("shift_timestamp_per_file", false);
+    s.shift_seconds = j.value("shift_seconds", 0);
+    s.embed_gps = j.value("embed_gps", true);
+    s.randomize_gps = j.value("randomize_gps", false);
+    s.gps_radius_meters = j.value("gps_radius_meters", 0.0f);
     if (j.contains("presets") && j["presets"].is_array()) {
         s.presets = j["presets"].get<std::vector<DevicePreset>>();
     }
@@ -95,7 +115,17 @@ AppSettings ConfigManager::create_defaults() {
     settings.last_input_directory = ".";
     settings.export_to_subfolder = false;
     settings.subfolder_name = "spoofiq_output";
-    settings.start_index = 1;
+    settings.skip_existing_files = false;
+    settings.auto_detect_index = true;
+    settings.manual_start_index = 1;
+    settings.selected_preset_id = "iphone_16_pro_max";
+    settings.use_current_time = true;
+    settings.custom_datetime = "";
+    settings.shift_timestamp_per_file = false;
+    settings.shift_seconds = 0;
+    settings.embed_gps = true;
+    settings.randomize_gps = false;
+    settings.gps_radius_meters = 0.0f;
     
     settings.presets = {
         {

@@ -29,6 +29,35 @@ public:
     static void init();
     static std::shared_ptr<spdlog::logger> get();
     static std::shared_ptr<ImGuiConsoleSink> console_sink();
+    
+    // Convenience functions
+    template <typename... Args>
+    static void info(spdlog::format_string_t<Args...> fmt, Args&&... args) {
+        if (auto logger = get()) {
+            logger->info(fmt, std::forward<Args>(args)...);
+        }
+    }
+    
+    template <typename... Args>
+    static void warn(spdlog::format_string_t<Args...> fmt, Args&&... args) {
+        if (auto logger = get()) {
+            logger->warn(fmt, std::forward<Args>(args)...);
+        }
+    }
+    
+    template <typename... Args>
+    static void error(spdlog::format_string_t<Args...> fmt, Args&&... args) {
+        if (auto logger = get()) {
+            logger->error(fmt, std::forward<Args>(args)...);
+        }
+    }
+    
+    template <typename... Args>
+    static void debug(spdlog::format_string_t<Args...> fmt, Args&&... args) {
+        if (auto logger = get()) {
+            logger->debug(fmt, std::forward<Args>(args)...);
+        }
+    }
 
 private:
     static std::shared_ptr<spdlog::logger> logger_;

@@ -31,7 +31,25 @@ struct AppSettings {
     std::string last_input_directory;
     bool export_to_subfolder;
     std::string subfolder_name;
-    int start_index;
+    bool skip_existing_files;
+    bool auto_detect_index;
+    int manual_start_index;
+    
+    // Active preset
+    std::string selected_preset_id;
+    
+    // Timestamp settings
+    bool use_current_time;
+    std::string custom_datetime; // ISO 8601 format
+    bool shift_timestamp_per_file;
+    int shift_seconds;
+    
+    // GPS settings
+    bool embed_gps;
+    bool randomize_gps;
+    float gps_radius_meters;
+    
+    // Saved presets
     std::vector<DevicePreset> presets;
 };
 
