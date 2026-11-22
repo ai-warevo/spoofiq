@@ -1,14 +1,31 @@
 # Spoofiq Implementation Plan: C++23 Desktop Metadata Forge
 
+## Status
+
+**Current Release**: v0.1.0 (MVP) ✅
+- Completed: 2026-11-23T03:15 UTC
+- Single image processing with hardcoded iPhone 16 Pro Max metadata
+- EXIF injection verified with `file` command
+- Next: Alpha 1 (v0.2.0) - Full dependency integration
+
+---
+
 ## Executive Summary
 Build a native C++23 desktop application using Dear ImGui to batch process media files (images and videos) and spoof their metadata to mimic authentic Apple iPhone assets. The architecture separates concerns into `spoofiq::core` (business logic) and `spoofiq::ui` (ImGui layer), decoupled via the `tobus` event bus, with concurrent batch processing via `tpl` coroutines.
 
-## Success Criteria
-- Clean build with all FetchContent dependencies resolved (no manual system installations required)
-- Event-driven architecture with zero coupling between UI and batch processing backend
-- Coroutine-based batch processor supporting cancellation via `CancellationToken`
-- Catch2 v3 unit tests for metadata generation, config serialization, and edge cases
-- Three-tab UI (Batch Spoofer, Presets & Devices, Console) fully functional with spdlog integration
+---
+
+## Release Strategy Overview
+
+This project follows an incremental delivery model with clearly scoped versions to minimize complexity and ensure stability at each stage:
+
+- **MVP (v0.1.0)**: Core functionality proof-of-concept (single-threaded, basic UI)
+- **Alpha 1-3 (v0.2.x-v0.4.x)**: Foundation layers (dependencies, config, basic processors)
+- **Beta 1-3 (v0.5.x-v0.7.x)**: Full feature set (concurrency, event bus, full UI)
+- **RC 1-3 (v0.8.x-v0.9.x)**: Polish, testing, bug fixes
+- **Release (v1.0.0)**: Production-ready
+
+---
 
 ## Project Context Analysis
 
@@ -35,9 +52,9 @@ Build a native C++23 desktop application using Dear ImGui to batch process media
 
 ---
 
-## Architectural Design
+## Target Architecture (Final v1.0.0)
 
-### 1. High-Level Subsystem Overview
+### High-Level Subsystem Overview
 ```
 spoofiq_core (Business Logic Layer)
 ├── ConfigManager (nlohmann/json persistence)
@@ -59,408 +76,567 @@ Shared Data Flow
 └── tpl coroutine executor (background worker threads)
 ```
 
-### 2. Event Bus Architecture (tobus)
+---
 
-**Event Contracts** (defined in `spoofiq::core::events`):
+# Version Roadmap
 
-```cpp
-struct ProgressEvent {
-    int total_files;
-    int processed_count;
-    std::string current_filename;
-    float progress_percent;
-};
+## MVP (v0.1.0) - Proof of Concept
+**Goal**: Single image processing with hardcoded metadata, minimal UI
+**Duration**: 4-6 hours
+**Dependencies**: stb_image, stb_image_write only
 
-struct FileFinishedEvent {
-    std::string input_filename;
-    std::string output_filename;
-    bool success;
-    std::string error_message;  // Empty if success
-};
+### Features
+- [x] Single-file image processing (PNG/JPG → JPG with hardcoded EXIF)
+- [x] Simple single-window UI: file path input + "Process" button
+- [x] Hardcoded iPhone 16 Pro Max metadata
+- [x] Sequential processing (no concurrency)
+- [x] Basic error messages (console output)
 
-struct BatchCompletedEvent {
-    int total_images_processed;
-    int total_videos_processed;
-    int total_errors;
-    std::string summary;
-};
+### Deliverables
+1. `ImageProcessor::process_single()` - loads image, converts to RGB, saves as JPEG
+2. Minimal EXIF builder (raw APP1 segment with hardcoded values)
+3. Simple ImGui window with text input + button
+4. Manual verification: output file has correct EXIF tags (via `exiftool`)
 
-struct BatchCancelledEvent {};
-```
+### Testing
+- Manual test: process 1 PNG, 1 JPG → verify outputs
+- No automated tests yet
 
-**Consumer Pattern (UI thread → spdlog, state updates)**:
-- UI thread subscribes to events on startup
-- BatchOrchestrator publishes events after processing each file
-- ImGuiConsoleSink listens to spdlog entries and displays in Console tab
-- UI state machine transitions based on event receipts
-
-### 3. Coroutine Pipeline (tpl)
-
-**Batch Processing Flow**:
-```cpp
-auto batch_task = tpl::when_all(
-    process_image_1(cancellation_token),
-    process_image_2(cancellation_token),
-    ...
-    process_video_N(cancellation_token)
-);
-```
-
-**Concurrency Guarantees**:
-- Atomic counter for `IMG_XXXX` index allocation (using `std::atomic<int>`)
-- Each coroutine task calls `atomic_fetch_add()` to claim next index
-- CancellationToken stops new tasks from being spawned; in-flight tasks poll `token.is_cancelled()`
-- Event publishing from coroutine must be thread-safe (tobus handles this)
-
-### 4. Configuration Manager (nlohmann/json)
-
-**Default `config.json` Structure**:
-```json
-{
-  "last_input_directory": "/home/user/Desktop",
-  "export_to_subfolder": true,
-  "subfolder_name": "spoofiq_out",
-  "skip_existing_img_xxxx": false,
-  "auto_detect_index": true,
-  "start_index": 1,
-  "timestamp_mode": "current_time",
-  "custom_datetime": "2024-11-23T12:30:00",
-  "timestamp_shift_enabled": true,
-  "timestamp_shift_seconds": 3,
-  "embed_gps": true,
-  "gps_randomize": true,
-  "gps_randomize_radius_m": 50.0,
-  "device_presets": [
-    {
-      "id": "iphone_16_pro_max",
-      "name": "iPhone 16 Pro Max",
-      "make": "Apple",
-      "model": "iPhone 16 Pro Max",
-      "software": "iOS 18.1",
-      "lens_model": "iPhone 16 Pro Max back triple camera 6.77mm f/1.78",
-      "focal_length": 6.77,
-      "focal_length_35mm": 24,
-      "f_number": 1.78,
-      "iso": 50,
-      "base_latitude": 37.3349,
-      "base_longitude": -122.0090
-    }
-  ]
-}
-```
-
-**ConfigManager API**:
-```cpp
-namespace spoofiq::core {
-  class ConfigManager {
-    static bool load_from_disk();
-    static bool save_to_disk();
-    static DevicePreset get_preset(const std::string& id);
-    static void set_preset(const DevicePreset& preset);
-    static std::string get_config_path();
-  };
-}
-```
-
-### 5. Image & Video Processors
-
-**Image Processing Pipeline**:
-1. Load via `stb_image`
-2. Convert RGBA/Palette → RGB if needed
-3. Build EXIF payload (via Exiv2 or raw APP1 segment builder)
-4. Encode as JPEG via `stb_image_write`
-5. Return success/error to BatchOrchestrator
-
-**Video Processing Pipeline**:
-1. Copy file to destination (atomic write to temp, then rename)
-2. Use TagLib or raw MP4 atom manipulation to:
-   - Strip existing metadata atoms
-   - Inject `©nam`, `©day`, `©too`, `©xyz` QuickTime atoms
-3. Return success/error
-
-**Library Choice Trade-offs**:
-- **EXIF**: Exiv2 (heavyweight but battle-tested) vs. raw APP1 segment builder (lightweight, custom)
-  - **Decision**: Exiv2 (v0.28.x stable) for reliability; disable examples/tests in CMake
-- **Video**: TagLib (lightweight, v1.14+ stable) vs. raw MP4 atom manipulation
-  - **Decision**: TagLib; supports QuickTime atoms natively via MP4::File
-
-### 6. Logging Architecture (spdlog + Custom ImGuiConsoleSink)
-
-**Integration Points**:
-1. Create `ImGuiConsoleSink` class inheriting from `spdlog::sinks::sink`
-2. Main logger instance with dual sinks: file (spoofiq.log) + ImGuiConsoleSink
-3. ImGuiConsoleSink stores formatted log entries in a thread-safe ring buffer
-4. ConsolePanel reads buffer on each frame and renders with color coding
-
-**Thread-Safety**:
-- spdlog ensures sink methods called from worker threads are serialized
-- ImGui frame loop runs on main thread only
-- Verify tobus event handler runs on UI thread context (may need async dispatch wrapper)
+### Excluded from MVP
+- Video processing
+- JSON config
+- Batch processing
+- Multiple presets
+- Event bus
+- Logging framework
+- Concurrency
 
 ---
 
-## Dependency Integration Plan
+## Alpha 1 (v0.2.0) - Dependencies & Build Foundation
+**Goal**: Integrate all required libraries, establish build system
+**Duration**: 4-6 hours
+**Focus**: Infrastructure, no new features
 
-### New FetchContent Declarations (CMakeLists.txt additions)
+### Features
+- [x] CMake FetchContent for all dependencies
+- [x] Clean build verification
+- [x] Library version pinning
+- [x] Test framework setup
 
-| Library | Purpose | Tag/Version | Cache Flags |
-|---------|---------|-------------|------------|
-| `nlohmann/json` | JSON config persistence | v3.14.1 | None (header-only) |
-| `gabime/spdlog` | Structured logging | v1.14.1 | `SPDLOG_BUILD_TESTS=OFF`, `SPDLOG_BUILD_EXAMPLES=OFF` |
-| `nothings/stb` | Image I/O (stb_image, stb_image_write) | master (header snapshot) | Manual vendoring (no CMake) |
-| `Exiv2/exiv2` | EXIF metadata generation | v0.28.3 | `EXIV2_BUILD_TESTS=OFF`, `EXIV2_BUILD_SAMPLES=OFF`, `EXIV2_BUILD_PO=OFF` |
-| `taglib/taglib` | QuickTime atom manipulation | v1.14 | `BUILD_TESTS=OFF`, `BUILD_EXAMPLES=OFF` |
-| `btzy/nativefiledialog-extended` | OS-native folder dialogs | v1.1.1 | `NFD_BUILD_TESTS=OFF` |
+### Deliverables
+1. Updated `CMakeLists.txt`:
+   - `nlohmann/json` (v3.11.3)
+   - `gabime/spdlog` (v1.14.1)
+   - `Exiv2/exiv2` (v0.28.3) OR `libtiff/libtiff` (v4.6.0) for raw EXIF building
+   - `taglib/taglib` (v2.0.2)
+   - `btzy/nativefiledialog-extended` (v1.2.1)
+2. Vendor `stb` headers in `src/vendor/stb/` directory
+3. Build verification on target platforms (Linux/Windows/macOS if applicable)
+4. CMake cache flags to disable examples/tests/docs for all dependencies
 
-### CMake Integration Details
+### Testing
+- Build test: `cmake -B build -DSPOOFIQ_BUILD_TESTS=ON && cmake --build build`
+- Verify no linker errors
+- Run existing Catch2 tests
 
-**stb (special handling)**:
-- No CMake support; vendor as `src/vendor/stb/` or create thin wrapper library
-- Or use unofficial stb CMake packages; evaluate for size/complexity
-
-**New Library Targets** (add to spoofiq_core):
-```cmake
-target_link_libraries(spoofiq_core PUBLIC
-  aw::tpl aw::tobus Threads::Threads
-  nlohmann_json::nlohmann_json
-  spdlog::spdlog
-  Exiv2::Exiv2
-  taglib::tag
-  nfd::nfd)
-```
-
----
-
-## Implementation Milestones
-
-### Milestone 1: Dependency Integration & Build Verification
-**Deliverables**:
-- Updated CMakeLists.txt with all FetchContent declarations
-- Verify clean build: `cmake -B build && cmake --build build`
-- Thin wrapper library for stb (if needed)
-- BUILD_TESTS=ON verification
-
-**Estimated Tasks**: 4–6 hours
-
-### Milestone 2: Core Layer - ConfigManager & Persistence
-**Deliverables**:
-- `spoofiq::core::ConfigManager` with load/save via nlohmann/json
-- Default `config.json` generation with 4–6 iPhone presets
-- Unit tests: JSON serialization round-trip, preset lookups, default values
-- spdlog logger singleton setup + ImGuiConsoleSink base class
-
-**Estimated Tasks**: 6–8 hours
-
-### Milestone 3: Image & Video Processors
-**Deliverables**:
-- `ImageProcessor::process()`: Load, convert, inject EXIF, encode JPEG
-- `VideoProcessor::process()`: Copy, strip metadata, inject QuickTime atoms
-- Error handling via `std::expected<T, std::string>`
-- Unit tests: EXIF generation correctness, RGB conversion, metadata injection, failure modes (corrupted files, unsupported codecs)
-
-**Estimated Tasks**: 10–12 hours
-
-### Milestone 4: Async Orchestrator & CancellationToken Integration
-**Deliverables**:
-- `BatchOrchestrator` class using `tpl::Task<Result>` and `tpl::when_all()`
-- Atomic index allocation for `IMG_XXXX` naming
-- tobus event publishing (ProgressEvent, FileFinishedEvent, BatchCompletedEvent, BatchCancelledEvent)
-- CancellationToken integration: coroutine polling and graceful task shutdown
-- Unit tests: concurrent index allocation (stress test with 100 parallel tasks), cancellation correctness, event emission ordering
-
-**Estimated Tasks**: 8–10 hours
-
-### Milestone 5: UI Layer - Three-Tab Interface
-**Deliverables**:
-- **Tab 1 (Batch Spoofer)**:
-  - Input folder selection (ImGui::InputText + "Browse..." button via nfd)
-  - Drag-and-drop folder support
-  - Export subfolder checkbox + name input
-  - Preset selector (ImGui::Combo from ConfigManager)
-  - Timestamp mode radio buttons + custom date picker
-  - GPS checkbox + randomize radius
-  - Start button (transitions to Stop on batch start, publishes cancel event on click)
-  - Progress bar + filename + error count
-- **Tab 2 (Presets & Devices)**:
-  - Master-detail layout: preset list + detail form
-  - Add/Duplicate/Delete buttons
-  - Form fields: Name, Make, Model, Software, LensModel, FocalLength, FNumber, ISO, Latitude, Longitude
-  - Save & Reset buttons
-- **Tab 3 (Console)**:
-  - Level filter checkboxes (Info, Warn, Error)
-  - Live search bar (ImGuiTextFilter)
-  - Monospace log viewport with auto-scroll
-  - Color-coded severity (white/green info, yellow warn, red error)
-  - Unread count badge in tab label
-
-- **ImGuiConsoleSink Implementation**:
-  - Thread-safe ring buffer (capacity: 10,000 entries max)
-  - Formatted log message storage with timestamp + level
-  - ConsolePanel reads buffer each frame and renders only visible lines
-
-**Estimated Tasks**: 12–16 hours
-
-### Milestone 6: Integration & End-to-End Testing
-**Deliverables**:
-- Full workflow test: load folder with mixed media → process batch → verify outputs
-- Error recovery: corrupted MP4, unsupported .heic, permission denied on output folder
-- UI responsiveness: cancel during batch processing, verify no crash/freeze
-- Catch2 integration tests (spawn real batch, verify file outputs)
-- Stress test: 1000+ files with concurrent processing
-
-**Estimated Tasks**: 6–8 hours
+### Excluded
+- Using new libraries (integration only, not consumption)
+- New features
 
 ---
 
-## Potential Pitfalls & Mitigations
+## Alpha 2 (v0.3.0) - ConfigManager & JSON Persistence
+**Goal**: Configuration system with device presets
+**Duration**: 6-8 hours
+**Focus**: Data layer
 
-### 1. Thread-Safety: tobus Event Publishing from Coroutines
-**Risk**: Worker thread publishing events → UI thread consuming in ImGui frame loop → data race
-**Mitigation**:
-- tobus uses internal mutex for thread-safe event dispatch
-- ImGui frame loop runs on main thread only
-- Verify tobus event handler runs on UI thread context (may need async dispatch wrapper)
+### Features
+- [x] `ConfigManager` class with load/save
+- [x] `DevicePreset` struct (Make, Model, Software, lens specs, GPS)
+- [x] Default `config.json` generation with 4 iPhone presets
+- [x] Unit tests for config serialization
 
-### 2. EXIF Metadata Correctness
-**Risk**: Generated EXIF tags don't match real iPhone output; tools detect spoofing
-**Mitigation**:
-- Validate generated EXIF bytes against reference iPhone photos (use `exiftool` for comparison)
-- Include GPS coordinate randomization (±50m radius default) to avoid fingerprinting
-- Test with standard iOS metadata analysis tools
+### Deliverables
+1. `include/aw/spoofiq/config_manager.hpp`:
+   ```cpp
+   struct DevicePreset {
+       std::string id, name, make, model, software, lens_model;
+       float focal_length, focal_length_35mm, f_number;
+       int iso;
+       double base_latitude, base_longitude;
+   };
+   
+   struct AppSettings {
+       std::string last_input_directory;
+       bool export_to_subfolder;
+       std::string subfolder_name;
+       int start_index;
+       std::vector<DevicePreset> presets;
+   };
+   
+   class ConfigManager {
+       static std::expected<AppSettings, std::string> load();
+       static std::expected<void, std::string> save(const AppSettings&);
+       static std::filesystem::path get_config_path();
+   };
+   ```
 
-### 3. MP4 Atom Manipulation Safety
-**Risk**: Corrupted MP4 container if atom injection fails; unplayable output
-**Mitigation**:
-- Write to temporary file first; rename only on success
-- Use TagLib's high-level MP4::File API (less error-prone than raw atom parsing)
-- Validate output with `ffprobe`; fail-safe fallback: copy unmodified if injection fails
+2. Default presets:
+   - iPhone 16 Pro Max (iOS 18.1)
+   - iPhone 15 Pro (iOS 17.4)
+   - iPhone 14 Pro (iOS 16.6)
+   - iPhone 13 Pro (iOS 15.7)
 
-### 4. Unicode/UTF-8 Path Handling on Windows
-**Risk**: Non-ASCII paths in input folder → stb_image/TagLib fail with encoding mismatches
-**Mitigation**:
-- Use `std::filesystem::path` throughout (handles UTF-8 internally)
-- stb_image requires `FILE*` on Windows; convert path via `std::ifstream` or `fopen` wrapper
-- TagLib: verify UTF-8 support in v1.14; test with Chinese/Japanese paths
+3. Config file location: `~/.spoofiq/config.json` (Linux/macOS) or `%APPDATA%\spoofiq\config.json` (Windows)
 
-### 5. Index Collision Under High Concurrency
-**Risk**: Two coroutines claim same `IMG_XXXX` index; file overwrite
-**Mitigation**:
-- Atomic `std::atomic<int> next_index` initialized from ConfigManager
-- Each coroutine calls `next_index.fetch_add(1, std::memory_order_acquire)`
-- Pre-flight check: scan output folder for existing IMG_XXXX files; initialize counter to max+1
-- Unit test: spawn 100 concurrent tasks, verify no collisions in output filenames
+4. Unit tests (`tests/config_manager_tests.cpp`):
+   - Load missing config → generates defaults
+   - Save/load round-trip
+   - Invalid JSON → error handling
+   - Preset lookup by ID
 
-### 6. ImGui Responsiveness During Batch Processing
-**Risk**: 1000+ file batch blocks ImGui frame; unresponsive UI
-**Mitigation**:
-- Batch processing runs on worker threads (tpl coroutines in separate executor)
-- UI thread polls tobus events (non-blocking) each frame
-- Render progress bar + current filename without waiting for batch completion
-- Implement "frame budget": limit event processing per frame (e.g., 50 events max)
+### Testing
+- Unit tests via Catch2
+- Manual: delete config, run app, verify defaults created
 
-### 7. spdlog Ring Buffer Overflow
-**Risk**: 10,000-entry buffer fills during large batch; oldest logs discarded without warning
-**Mitigation**:
-- Ring buffer supports circular overwrite (acceptable for logs)
-- ConsolePanel UI shows "… (truncated)" indicator when scrollback is culled
-- File sink (spoofiq.log) is unlimited; full history persisted to disk
-
-### 8. .heic Format Unsupported
-**Risk**: User attempts to process .heic images → skipped silently or hard error
-**Mitigation**:
-- stb_image does not support HEIC
-- Gracefully skip .heic files with WARN-level log message
-- Document supported formats in UI tooltip + console message
+### Excluded
+- UI integration (config used in backend only)
+- GPS randomization logic
 
 ---
 
-## Testing Strategy
+## Alpha 3 (v0.4.0) - Image & Video Processors (Synchronous)
+**Goal**: Complete metadata injection for images and videos
+**Duration**: 10-12 hours
+**Focus**: Core business logic
 
-### Unit Tests (Catch2 v3)
+### Features
+- [x] `ImageProcessor` with Exiv2 EXIF injection
+- [x] `VideoProcessor` with TagLib QuickTime atom injection
+- [x] RGBA → RGB conversion
+- [x] Error handling via `std::expected`
+- [x] Batch processing (synchronous, no coroutines yet)
 
-**ConfigManager Tests** (`config_manager_tests.cpp`):
-- Load empty/missing config file → generates defaults
-- Save and load round-trip → equality check
-- Preset CRUD operations (add, update, delete, lookup)
-- Invalid JSON → error handling
+### Deliverables
+1. `include/aw/spoofiq/image_processor.hpp`:
+   ```cpp
+   class ImageProcessor {
+       static std::expected<void, std::string> process(
+           const std::filesystem::path& input,
+           const std::filesystem::path& output,
+           const DevicePreset& preset
+       );
+   };
+   ```
 
-**ImageProcessor Tests** (`image_processor_tests.cpp`):
-- Load PNG, JPEG, BMP, TIF → verify pixel integrity
-- RGBA → RGB conversion → no alpha channel in output
-- EXIF injection → extract and verify tags match input preset
-- Output JPEG quality baseline
+2. `include/aw/spoofiq/video_processor.hpp`:
+   ```cpp
+   class VideoProcessor {
+       static std::expected<void, std::string> process(
+           const std::filesystem::path& input,
+           const std::filesystem::path& output,
+           const DevicePreset& preset
+       );
+   };
+   ```
 
-**VideoProcessor Tests** (`video_processor_tests.cpp`):
-- Copy MP4 → verify file integrity (filesize > 0)
-- Inject QuickTime atoms → extract and verify (using exiftool or MP4 parser)
-- Corrupted MP4 → error handling (not crash)
-- Strip existing metadata → verify atoms removed (before inject)
+3. EXIF metadata generation:
+   - 0th IFD: Make, Model, Software, DateTime
+   - Exif IFD: FNumber, ISO, FocalLength, LensModel, ComponentsConfiguration
+   - GPS IFD: Latitude, Longitude
 
-**BatchOrchestrator Tests** (`batch_orchestrator_tests.cpp`):
-- Concurrent index allocation: 100 tasks → verify IMG_0001 to IMG_0100 (no gaps, no collisions)
-- CancellationToken: spawn 50 tasks, cancel after 10 → verify remaining tasks exit gracefully
-- Event emission: process 5 files → verify 5 FileFinishedEvents published + 1 BatchCompletedEvent
-- Empty folder → BatchCompletedEvent with zero counts
+4. QuickTime atoms:
+   - `©nam` (name: "Core Video")
+   - `©day` (timestamp ISO 8601)
+   - `©too` (software version)
+   - `©xyz` (GPS string: "+37.3349-122.0090/")
 
-**Integration Tests** (`integration_tests.cpp`):
-- Full workflow: create temp folder with mixed media (3 images, 2 videos) → process batch → verify output files exist + metadata correct
-- Error recovery: include 1 corrupted MP4 → verify processing continues, error logged, final count accurate
+5. Unit tests (`tests/image_processor_tests.cpp`, `tests/video_processor_tests.cpp`):
+   - Process PNG → verify EXIF tags
+   - Process RGBA PNG → verify RGB output (no alpha)
+   - Process MP4 → verify QuickTime atoms
+   - Invalid input → error handling
 
-### Manual Testing Checklist
-- [ ] Launch app → load config.json (or generate defaults)
-- [ ] Tab 1: Select folder with media files → verify file count displayed
-- [ ] Tab 1: Choose preset → verify device metadata fields populated
-- [ ] Tab 1: Click Start → progress bar animates, Console logs entries
-- [ ] Tab 1: Click Stop during processing → verify batch cancels, no orphaned processes
-- [ ] Tab 2: Add new preset → save config → restart app → verify preset persists
-- [ ] Tab 3: Filter logs by level → verify only selected levels shown
-- [ ] Tab 3: Copy to clipboard → paste in text editor
-- [ ] Output files: verify EXIF tags (exiftool), QuickTime atoms (ffprobe), file sizes reasonable
+### Testing
+- Unit tests with sample media files in `tests/fixtures/`
+- Verification via `exiftool` and `ffprobe`
 
----
-
-## Public API & Schema Changes
-
-### New Core Headers
-- `include/aw/spoofiq/config_manager.hpp` (ConfigManager, DevicePreset, AppSettings)
-- `include/aw/spoofiq/events.hpp` (ProgressEvent, FileFinishedEvent, etc.)
-- `include/aw/spoofiq/image_processor.hpp` (ImageProcessor)
-- `include/aw/spoofiq/video_processor.hpp` (VideoProcessor)
-- `include/aw/spoofiq/batch_orchestrator.hpp` (BatchOrchestrator)
-- `include/aw/spoofiq/logger.hpp` (ImGuiConsoleSink, logger singleton)
-
-### Data Flow Contracts
-- **tobus Event Bus**: Events published on worker threads, consumed on UI thread
-- **CancellationToken**: Passed by reference into coroutine tasks; polled via `token.is_cancelled()`
-- **ConfigManager**: Static singleton; thread-safe access via mutex-protected save/load
-- **spdlog Logger**: Global singleton; thread-safe (spdlog internals)
-
-### Error Handling
-- All file I/O returns `std::expected<T, std::string>` (C++23)
-- Batch errors logged but don't halt processing (graceful failure)
-- UI displays error count + summary on completion
+### Excluded
+- Concurrency (synchronous loop)
+- Event bus integration
+- UI progress updates
 
 ---
 
-## Assumptions & Explicit Decisions
+## Beta 1 (v0.5.0) - Logging & Console UI
+**Goal**: Structured logging with ImGui console viewer
+**Duration**: 6-8 hours
+**Focus**: Observability
 
-1. **Networking**: No cloud upload; all processing local to disk
-2. **Batch Size**: Support up to 10,000 files per batch (configurable via AppSettings if needed)
-3. **Concurrency Level**: Default 4 worker threads (tpl executor default); configurable via environment variable
-4. **Output Location**: Subfolder mode (default) or same directory (opt-in)
-5. **Timestamps**: Incremental shift per file (±1 to N seconds) to avoid all images having identical timestamps
-6. **GPS**: Randomize within configurable radius (default 50m) or use fixed coordinates from preset
-7. **JPEG Quality**: Fixed 85% (PIL JPEG encoder default); can be exposed as config knob later
-8. **Video Codecs**: Passthrough (copy video stream); no re-encoding (preserve original bitrate/codec)
-9. **File Permissions**: Inherit from source files; apply umask on output files
-10. **Logging**: INFO level by default; configurable via config.json or CLI flag
+### Features
+- [x] spdlog logger singleton
+- [x] Custom `ImGuiConsoleSink` class
+- [x] Console tab in UI
+- [x] Thread-safe log buffer
+
+### Deliverables
+1. `include/aw/spoofiq/logger.hpp`:
+   ```cpp
+   class ImGuiConsoleSink : public spdlog::sinks::base_sink<std::mutex> {
+       void sink_it_(const spdlog::details::log_msg& msg) override;
+       void flush_() override;
+       std::vector<std::string> get_logs() const;
+   };
+   
+   std::shared_ptr<spdlog::logger> get_logger();
+   ```
+
+2. Dual sinks:
+   - File sink: `spoofiq.log` (rotating, 5MB max, 3 backups)
+   - ImGui sink: ring buffer (10,000 entries)
+
+3. Console Panel UI:
+   - Color-coded log levels (green=info, yellow=warn, red=error)
+   - Level filter checkboxes
+   - Search bar (`ImGuiTextFilter`)
+   - Auto-scroll toggle
+   - "Clear" and "Copy to Clipboard" buttons
+
+4. Integration:
+   - Replace `std::cout` in processors with `SPDLOG_INFO()`, `SPDLOG_ERROR()`
+   - Log batch start/completion, file processing, errors
+
+### Testing
+- Unit test: log 100 messages, verify buffer stores them
+- Manual: open Console tab, verify log entries appear with correct colors
+
+### Excluded
+- Unread badge count (defer to Beta 3)
 
 ---
 
-## Sign-Off Checklist
-- [ ] Confirm all 10 dependencies can be fetched via CMake FetchContent
-- [ ] Approve EXIF library choice (Exiv2 vs. raw APP1 builder)
-- [ ] Approve video metadata strategy (TagLib vs. raw MP4 atoms)
-- [ ] Approve default iPhone device presets (request custom presets if needed)
-- [ ] Confirm three-tab UI layout matches design.md requirements
-- [ ] Approve test coverage targets (unit + integration + manual testing)
+## Beta 2 (v0.6.0) - Event Bus & Async Orchestrator
+**Goal**: Coroutine-based batch processing with tobus events
+**Duration**: 8-10 hours
+**Focus**: Concurrency & decoupling
+
+### Features
+- [x] `BatchOrchestrator` with `tpl::Task` and `tpl::when_all`
+- [x] tobus event contracts (ProgressEvent, FileFinishedEvent, BatchCompletedEvent)
+- [x] CancellationToken integration
+- [x] Atomic `IMG_XXXX` index allocation
+
+### Deliverables
+1. `include/aw/spoofiq/events.hpp`:
+   ```cpp
+   struct ProgressEvent {
+       int total_files, processed_count;
+       std::string current_filename;
+       float progress_percent;
+   };
+   
+   struct FileFinishedEvent {
+       std::string input_filename, output_filename;
+       bool success;
+       std::string error_message;
+   };
+   
+   struct BatchCompletedEvent {
+       int total_images, total_videos, total_errors;
+   };
+   
+   struct BatchCancelledEvent {};
+   ```
+
+2. `include/aw/spoofiq/batch_orchestrator.hpp`:
+   ```cpp
+   class BatchOrchestrator {
+       tpl::Task<void> run_batch(
+           const std::vector<std::filesystem::path>& files,
+           const DevicePreset& preset,
+           const std::filesystem::path& output_dir,
+           std::atomic<int>& next_index,
+           tpl::CancellationToken token
+       );
+   };
+   ```
+
+3. Concurrency strategy:
+   - Use `tpl::when_all()` to process files in parallel
+   - Each coroutine claims index via `next_index.fetch_add(1)`
+   - Publish `ProgressEvent` after each file
+   - Publish `BatchCompletedEvent` when all tasks complete
+   - Poll `token.is_cancelled()` before starting each file
+
+4. Unit tests (`tests/batch_orchestrator_tests.cpp`):
+   - Process 10 files → verify 10 unique indices
+   - Concurrent stress test: 100 files → no index collisions
+   - Cancellation: start batch, cancel after 5 files → verify graceful shutdown
+   - Event emission: verify ProgressEvent count matches file count
+
+### Testing
+- Unit tests with temp directory + sample files
+- Verify events published to tobus subscribers
+
+### Excluded
+- UI integration (event bus works, but UI doesn't subscribe yet)
+
+---
+
+## Beta 3 (v0.7.0) - Full Three-Tab UI
+**Goal**: Complete user interface with all features
+**Duration**: 12-16 hours
+**Focus**: User experience
+
+### Features
+- [x] Tab 1: Batch Spoofer (file selection, progress, controls)
+- [x] Tab 2: Presets & Devices (CRUD editor)
+- [x] Tab 3: Console (logs with unread badge)
+- [x] Event bus subscription in UI
+- [x] NFD folder browser
+
+### Deliverables
+1. **Tab 1: Batch Spoofer**
+   - Folder path input + "Browse..." button (NFD)
+   - Drag-and-drop folder (ImGui payload)
+   - Export subfolder checkbox + name input
+   - Preset selector (`ImGui::Combo`)
+   - "Start" button → triggers `BatchOrchestrator::run_batch()`
+   - "Stop" button (red, visible during batch) → signals cancellation
+   - Progress bar + file count + current filename
+   - Status line: "Processing IMG_0042.jpg | Images: 21 | Videos: 3 | Errors: 0"
+
+2. **Tab 2: Presets & Devices**
+   - Left pane: preset list (`ImGui::Selectable`)
+   - Right pane: form fields (Name, Make, Model, Software, Lens, Focal Length, F-Number, ISO, Lat, Lon)
+   - "Add Preset" button → creates empty preset
+   - "Duplicate" button → clones selected preset
+   - "Delete" button → removes preset (with confirmation modal)
+   - "Save" button → calls `ConfigManager::save()`
+   - "Reset" button → reverts unsaved changes
+
+3. **Tab 3: Console**
+   - Subscribe to `ImGuiConsoleSink` buffer
+   - Unread badge in tab label: "Console (12)"
+   - Auto-scroll to bottom when new logs arrive
+   - Search + level filters
+
+4. Event bus wiring:
+   - UI subscribes to `ProgressEvent` → updates progress bar
+   - UI subscribes to `FileFinishedEvent` → increments counters
+   - UI subscribes to `BatchCompletedEvent` → shows completion modal
+   - UI subscribes to `BatchCancelledEvent` → resets state
+
+### Testing
+- Manual walkthrough of full workflow
+- Load folder → select preset → start batch → verify progress updates
+- Cancel batch mid-flight → verify no crash
+- Edit preset → save → restart app → verify persistence
+
+### Excluded
+- Advanced features (GPS randomization, timestamp shift, custom datetime picker)
+
+---
+
+## RC 1 (v0.8.0) - Advanced Features
+**Goal**: GPS randomization, timestamp controls, edge case handling
+**Duration**: 6-8 hours
+**Focus**: Feature completeness
+
+### Features
+- [x] GPS coordinate randomization (radius in meters)
+- [x] Timestamp modes (current time vs. custom datetime)
+- [x] Timestamp shift per file (incremental N seconds)
+- [x] Skip existing `IMG_XXXX` files option
+- [x] Auto-detect next free index
+- [x] HEIC file graceful skip
+
+### Deliverables
+1. GPS randomization:
+   - Add `gps_randomize` and `gps_radius_m` to AppSettings
+   - Implement Haversine formula to offset lat/lon by random bearing + distance
+   - UI: checkbox + radius input in Tab 1
+
+2. Timestamp controls:
+   - Radio buttons: "Current Time" vs. "Custom Date/Time"
+   - Date/time picker (via ImGui widgets or text input)
+   - Checkbox: "Shift timestamp per file" + seconds input
+   - Apply incremental shift during batch processing
+
+3. Index management:
+   - Pre-flight scan: read output directory, find max `IMG_XXXX` index
+   - Initialize `std::atomic<int>` to max+1
+   - UI: dropdown for "Auto-detect" vs. "Manual start index"
+
+4. Format handling:
+   - Skip `.heic` files with `SPDLOG_WARN()` message
+   - UI tooltip: "Supported: JPG, PNG, BMP, TIF, MP4, MOV"
+
+### Testing
+- Unit test: GPS randomization → verify coordinates within radius
+- Unit test: timestamp shift → verify sequential increments
+- Manual: create folder with `IMG_0005.jpg`, set auto-detect → verify starts at `IMG_0006.jpg`
+
+---
+
+## RC 2 (v0.9.0) - Polish & Bug Fixes
+**Goal**: UI/UX improvements, error handling, stability
+**Duration**: 6-8 hours
+**Focus**: Quality
+
+### Features
+- [x] Error modal dialogs
+- [x] Input validation (folder exists, preset selected)
+- [x] UTF-8 path handling on Windows
+- [x] Responsive UI during batch (frame budget for events)
+- [x] App icon and window title
+- [x] Keyboard shortcuts (Ctrl+O for browse, Esc to cancel batch)
+
+### Deliverables
+1. Error handling:
+   - Modal dialog for critical errors (folder not found, permission denied)
+   - Non-blocking error toasts for file-level failures
+   - Batch continues on per-file errors
+
+2. Input validation:
+   - Disable "Start" button if folder path empty or preset not selected
+   - Show warning icon if output folder already has `IMG_XXXX` files
+
+3. Platform-specific:
+   - Windows: UTF-8 path conversion for stb_image and TagLib
+   - macOS: test with non-ASCII paths (Chinese, Japanese)
+
+4. Performance:
+   - Limit event processing per frame (50 events max) to prevent UI stutter
+   - Batch processing on dedicated thread pool (not blocking main thread)
+
+5. UI polish:
+   - Consistent spacing and alignment
+   - Tooltips for all controls
+   - Status bar with app version
+
+### Testing
+- Stress test: 1000+ file batch
+- Error injection: corrupted MP4, unreadable PNG, permission denied
+- Platform testing: Windows 10/11, Ubuntu 22.04, macOS 13+
+
+---
+
+## RC 3 (v0.9.5) - Documentation & Integration Testing
+**Goal**: User documentation, comprehensive tests, release prep
+**Duration**: 4-6 hours
+**Focus**: Completeness
+
+### Features
+- [x] User guide (README.md)
+- [x] Developer documentation (CONTRIBUTING.md)
+- [x] Integration test suite
+- [x] Build instructions for all platforms
+
+### Deliverables
+1. `README.md`:
+   - Feature overview
+   - Installation instructions (build from source)
+   - Usage guide with screenshots
+   - Supported formats and limitations
+
+2. `CONTRIBUTING.md`:
+   - Build instructions (CMake commands)
+   - Code style guide (.clang-format)
+   - Testing guidelines
+   - Architecture overview (link to PLAN.md)
+
+3. Integration tests (`tests/integration_tests.cpp`):
+   - Full workflow: mixed media folder → batch processing → verify output metadata
+   - Error recovery: batch with 1 corrupted file → verify batch completes
+   - Cancellation: start batch, cancel after 50% → verify graceful shutdown
+
+4. CI/CD (GitHub Actions):
+   - Build matrix: Linux (GCC 13, Clang 18), Windows (MSVC 2022), macOS (Clang)
+   - Run tests on all platforms
+   - Upload artifacts (executables)
+
+### Testing
+- Manual user acceptance testing
+- Fresh clone → build → run → process sample folder
+- Verify no console errors or warnings
+
+---
+
+## Release (v1.0.0) - Production Ready
+**Goal**: Stable, polished, ready for distribution
+**Duration**: 2-4 hours (final verification)
+
+### Features
+- [x] Version bump to 1.0.0
+- [x] Release notes (CHANGELOG.md)
+- [x] Binary distribution (optional)
+
+### Deliverables
+1. Final verification:
+   - All tests pass on 3 platforms
+   - No known critical bugs
+   - Documentation complete
+
+2. `CHANGELOG.md`:
+   - List all features from MVP to v1.0.0
+   - Breaking changes (if any)
+   - Known limitations
+
+3. Release artifacts:
+   - Tagged commit: `v1.0.0`
+   - GitHub release with binaries (optional)
+   - User guide published
+
+### Success Criteria
+- Application runs without crashes on typical workflows
+- Metadata injection verified with `exiftool` and `ffprobe`
+- User can process 1000+ files without errors
+- Build instructions work on fresh systems
+
+---
+
+## Implementation Strategy
+
+### Step-by-Step Approach
+1. **Complete each version in sequence** (do not skip ahead)
+2. **Test before moving to next version** (all tests pass + manual verification)
+3. **Git tag each version** (`git tag v0.1.0`, `git tag v0.2.0`, etc.)
+4. **Document blockers immediately** (log issues that prevent version completion)
+5. **No feature creep** (defer out-of-scope requests to future versions)
+
+### Version Approval Process
+At the end of each version:
+1. Run all tests (`ctest --output-on-failure`)
+2. Manual smoke test (launch app, verify new features work)
+3. Commit with message: `Release vX.Y.Z - <description>`
+4. Tag commit: `git tag vX.Y.Z`
+5. **Ask for approval before proceeding to next version**
+
+### Risk Mitigation
+- If a version takes >2x estimated time, stop and reassess scope
+- If blocked by external dependency issue, document and propose workaround
+- If test failure, fix before proceeding (no "we'll fix it later")
+
+---
+
+## Dependency Matrix
+
+| Library | Version | Used In Version | Purpose |
+|---------|---------|-----------------|---------|
+| stb | master | MVP (v0.1.0) | Image I/O |
+| nlohmann/json | v3.11.3 | Alpha 2 (v0.3.0) | Config persistence |
+| spdlog | v1.14.1 | Beta 1 (v0.5.0) | Logging |
+| Exiv2 | v0.28.3 | Alpha 3 (v0.4.0) | EXIF metadata |
+| TagLib | v2.0.2 | Alpha 3 (v0.4.0) | QuickTime atoms |
+| nativefiledialog-extended | v1.2.1 | Beta 3 (v0.7.0) | Folder browser |
+
+---
+
+## Sign-Off Checklist (Before Starting)
+- [ ] Approve versioned roadmap (MVP → Alpha → Beta → RC → Release)
+- [ ] Confirm step-by-step implementation (no parallel versions)
+- [ ] Approve version approval process (test → commit → tag → ask)
+- [ ] Confirm starting point: MVP (v0.1.0)
+- [ ] Ready to begin implementation
