@@ -5,6 +5,9 @@
 #include <aw/tpl/threading/tasks/task.hpp>
 #include <imgui.h>
 #include <format>
+#include <ctime>
+#include <iomanip>
+#include <sstream>
 
 namespace aw::spoofiq::ui {
 
@@ -37,57 +40,84 @@ PanelId ConsolePanel::id() const {
     return PanelId::Console;
 }
 
-void ConsolePanel::on_progress_event(const core::ProgressEvent& event) {
+std::string ConsolePanel::format_timestamp() const {
+    auto now = std::chrono::system_clock::now();
+    auto time_t_now = std::chrono::system_clock::to_time_t(now);
+    std::tm tm_now;
+    localtime_r(&time_t_now, &tm_now);
+    
+    std::ostringstream oss;
+    oss << std::put_time(&tm_now, "%H:%M:%S");
+    return oss.str();
+}
+
+void ConsolePanel::add_log(const std::string& message, int level) {
     log_buffer_.emplace_back(LogEntry{
-        .message = std::format("[Progress] File {} of {} | {:.0f}%",
-                              event.processed_count + 1,
-                              event.total_files,
-                              event.progress_percent),
-        .level = 0  // info
+        .message = message,
+        .timestamp = format_timestamp(),
+        .level = level
     });
     unread_count_++;
+}
+
+void ConsolePanel::on_progress_event(const core::ProgressEvent& event) {
+    add_log(std::format("[Progress] File {} of {} | {:.0f}%",
+                       event.processed_count + 1,
+                       event.total_files,
+                       event.progress_percent), 0);
 }
 
 void ConsolePanel::on_file_finished_event(const core::FileFinishedEvent& event) {
     if (event.success) {
-        log_buffer_.emplace_back(LogEntry{
-            .message = std::format("✓ Processed: {} → {}",
-                                  event.input_filename,
-                                  event.output_filename),
-            .level = 0  // info
-        });
+        add_log(std::format("✓ Processed: {} → {}",
+                           event.input_filename,
+                           event.output_filename), 0);
     } else {
-        log_buffer_.emplace_back(LogEntry{
-            .message = std::format("✗ Failed: {} - {}",
-                                  event.input_filename,
-                                  event.error_message),
-            .level = 2  // error
-        });
+        add_log(std::format("✗ Failed: {} - {}",
+                           event.input_filename,
+                           event.error_message), 2);
     }
-    unread_count_++;
 }
 
 void ConsolePanel::on_batch_completed_event(const core::BatchCompletedEvent& event) {
-    log_buffer_.emplace_back(LogEntry{
-        .message = std::format("Batch completed: {} images, {} videos, {} errors",
-                              event.total_images,
-                              event.total_videos,
-                              event.total_errors),
-        .level = event.total_errors > 0 ? 1 : 0  // warn or info
-    });
-    unread_count_++;
+    add_log(std::format("Batch completed: {} images, {} videos, {} errors",
+                       event.total_images,
+                       event.total_videos,
+                       event.total_errors),
+           event.total_errors > 0 ? 1 : 0);
 }
 
 void ConsolePanel::render() {
     // Mark as read when user views this tab
     unread_count_ = 0;
     
-    ImGui::Text("Event Log");
-    
+    // Top toolbar: filters + search + buttons
+    ImGui::Text("Filters:");
     ImGui::SameLine();
-    if (ImGui::Button("Clear", ImVec2(70, 0))) {
+    ImGui::Checkbox("Info", &show_info_);
+    ImGui::SameLine();
+    ImGui::Checkbox("Warn", &show_warn_);
+    ImGui::SameLine();
+    ImGui::Checkbox("Error", &show_error_);
+    
+    ImGui::SameLine(0, 20);
+    ImGui::Text("Search:");
+    ImGui::SameLine();
+    search_filter_.Draw("##search", 200.0f);
+    
+    ImGui::SameLine(0, 20);
+    if (ImGui::Button("Clear", ImVec2(60, 0))) {
         log_buffer_.clear();
         unread_count_ = 0;
+    }
+    
+    ImGui::SameLine();
+    if (ImGui::Button("Copy All", ImVec2(80, 0))) {
+        std::string clipboard_text;
+        for (const auto& entry : log_buffer_) {
+            clipboard_text += std::format("[{}] {}\n", entry.timestamp, entry.message);
+        }
+        ImGui::SetClipboardText(clipboard_text.c_str());
     }
     
     ImGui::SameLine();
@@ -95,9 +125,24 @@ void ConsolePanel::render() {
     
     ImGui::Separator();
     
+    // Log display region
     ImGui::BeginChild("LogRegion", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
     
     for (const auto& entry : log_buffer_) {
+        // Apply level filter
+        if ((entry.level == 0 && !show_info_) ||
+            (entry.level == 1 && !show_warn_) ||
+            (entry.level == 2 && !show_error_)) {
+            continue;
+        }
+        
+        // Apply search filter
+        std::string full_line = std::format("[{}] {}", entry.timestamp, entry.message);
+        if (!search_filter_.PassFilter(full_line.c_str())) {
+            continue;
+        }
+        
+        // Color based on level
         ImVec4 color;
         switch (entry.level) {
             case 1: // warn
@@ -107,9 +152,10 @@ void ConsolePanel::render() {
                 color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f);   // red
                 break;
             default: // info
-                color = ImVec4(0.4f, 0.9f, 0.4f, 1.0f);   // green
+                color = ImVec4(0.8f, 0.8f, 0.8f, 1.0f);   // light gray
         }
-        ImGui::TextColored(color, "%s", entry.message.c_str());
+        
+        ImGui::TextColored(color, "[%s] %s", entry.timestamp.c_str(), entry.message.c_str());
     }
     
     if (auto_scroll_ && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
