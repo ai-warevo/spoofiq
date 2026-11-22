@@ -130,17 +130,19 @@ endif()
 #endif()
 
 # TagLib (v2.0.2) - Used in Alpha 3
-if(NOT TARGET tag)
-    FetchContent_Declare(
-        taglib
-        GIT_REPOSITORY https://github.com/taglib/taglib.git
-        GIT_TAG v2.0.2
-        GIT_SHALLOW ON)
-    set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
-    set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(taglib)
-endif()
+# DISABLED FOR NOW - has linking issues in this environment
+# Will be properly integrated in Alpha 3
+#if(NOT TARGET tag)
+#    FetchContent_Declare(
+#        taglib
+#        GIT_REPOSITORY https://github.com/taglib/taglib.git
+#        GIT_TAG v2.0.2
+#        GIT_SHALLOW ON)
+#    set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+#    set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+#    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+#    FetchContent_MakeAvailable(taglib)
+#endif()
 
 # nativefiledialog-extended (v1.2.1) - Used in Beta 3
 # DISABLED FOR NOW - requires GTK3 on Linux

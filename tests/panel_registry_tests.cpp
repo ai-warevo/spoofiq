@@ -1,4 +1,4 @@
-#include <aw/spoofiq/types.hpp>
+#include <aw/spoofiq/core/types.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <memory>
 

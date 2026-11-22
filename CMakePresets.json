@@ -9,28 +9,116 @@
     {
       "name": "dev",
       "displayName": "Dev (Debug)",
-      "inherits": "debug"
+      "inherits": "debug-gcc"
     },
     {
       "name": "debug",
-      "displayName": "Debug",
-      "binaryDir": "${sourceDir}/build/Debug",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
-      }
+      "displayName": "Debug (default)",
+      "inherits": "debug-gcc"
     },
     {
       "name": "release",
-      "displayName": "Release",
-      "binaryDir": "${sourceDir}/build/Release",
+      "displayName": "Release (default)",
+      "inherits": "release-gcc"
+    },
+    {
+      "name": "debug-gcc",
+      "displayName": "Debug - GCC",
+      "binaryDir": "${sourceDir}/build/Debug-gcc",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "release-gcc",
+      "displayName": "Release - GCC",
+      "binaryDir": "${sourceDir}/build/Release-gcc",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "debug-clang",
+      "displayName": "Debug - Clang",
+      "binaryDir": "${sourceDir}/build/Debug-clang",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "release-clang",
+      "displayName": "Release - Clang",
+      "binaryDir": "${sourceDir}/build/Release-clang",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "debug-clang-libcxx",
+      "displayName": "Debug - Clang + libc++",
+      "binaryDir": "${sourceDir}/build/Debug-clang-libcxx",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_CXX_FLAGS": "-stdlib=libc++",
+        "CMAKE_EXE_LINKER_FLAGS": "-stdlib=libc++",
+        "CMAKE_SHARED_LINKER_FLAGS": "-stdlib=libc++"
+      }
+    },
+    {
+      "name": "release-clang-libcxx",
+      "displayName": "Release - Clang + libc++",
+      "binaryDir": "${sourceDir}/build/Release-clang-libcxx",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_CXX_FLAGS": "-stdlib=libc++",
+        "CMAKE_EXE_LINKER_FLAGS": "-stdlib=libc++",
+        "CMAKE_SHARED_LINKER_FLAGS": "-stdlib=libc++"
+      }
+    },
+    {
+      "name": "debug-msvc",
+      "displayName": "Debug - MSVC",
+      "binaryDir": "${sourceDir}/build/Debug-msvc",
+      "generator": "Visual Studio 17 2022",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "release-msvc",
+      "displayName": "Release - MSVC",
+      "binaryDir": "${sourceDir}/build/Release-msvc",
+      "generator": "Visual Studio 17 2022",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
       }
     },
     {
       "name": "clang18-libcxx",
       "displayName": "Debug, clang-18 + libc++",
-      "binaryDir": "${sourceDir}/build/clang18-libcxx",
+      "binaryDir": "${sourceDir}/build/Debug-clang18-libcxx",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_CXX_COMPILER": "clang++-18",
@@ -54,6 +142,46 @@
     {
       "name": "release",
       "configurePreset": "release",
+      "configuration": "Release"
+    },
+    {
+      "name": "debug-gcc",
+      "configurePreset": "debug-gcc",
+      "configuration": "Debug"
+    },
+    {
+      "name": "release-gcc",
+      "configurePreset": "release-gcc",
+      "configuration": "Release"
+    },
+    {
+      "name": "debug-clang",
+      "configurePreset": "debug-clang",
+      "configuration": "Debug"
+    },
+    {
+      "name": "release-clang",
+      "configurePreset": "release-clang",
+      "configuration": "Release"
+    },
+    {
+      "name": "debug-clang-libcxx",
+      "configurePreset": "debug-clang-libcxx",
+      "configuration": "Debug"
+    },
+    {
+      "name": "release-clang-libcxx",
+      "configurePreset": "release-clang-libcxx",
+      "configuration": "Release"
+    },
+    {
+      "name": "debug-msvc",
+      "configurePreset": "debug-msvc",
+      "configuration": "Debug"
+    },
+    {
+      "name": "release-msvc",
+      "configurePreset": "release-msvc",
       "configuration": "Release"
     },
     {
@@ -81,6 +209,70 @@
     {
       "name": "release",
       "configurePreset": "release",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "debug-gcc",
+      "configurePreset": "debug-gcc",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "release-gcc",
+      "configurePreset": "release-gcc",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "debug-clang",
+      "configurePreset": "debug-clang",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "release-clang",
+      "configurePreset": "release-clang",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "debug-clang-libcxx",
+      "configurePreset": "debug-clang-libcxx",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "release-clang-libcxx",
+      "configurePreset": "release-clang-libcxx",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "debug-msvc",
+      "configurePreset": "debug-msvc",
+      "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "release-msvc",
+      "configurePreset": "release-msvc",
       "configuration": "Release",
       "output": {
         "outputOnFailure": true

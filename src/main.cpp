@@ -11,8 +11,6 @@
 #include <memory>
 
 // Panel implementations
-#include "panels/general_panel.hpp"
-#include "panels/overlay_demo_panel.hpp"
 #include <aw/spoofiq/ui/panels/batch_spoofer_panel.hpp>
 
     namespace {
@@ -97,11 +95,9 @@ int main() {
     aw::spoofiq ::AppState app_state;
     aw::spoofiq ::PanelRegistry registry;
 
-    // Register panels (forward-declared, defined in src/panels/)
-    // Note: Panel implementations include their own headers
+    // Register only the BatchSpooferPanel
+    // Presets & Devices and Console tabs are stubs in ui.cpp for now
     registry.register_panel(std::make_shared<aw::spoofiq::ui::BatchSpooferPanel>());
-    registry.register_panel(std::make_shared<aw::spoofiq ::GeneralPanel>(app_state));
-    registry.register_panel(std::make_shared<aw::spoofiq ::OverlayDemoPanel>(registry.overlay_canvas()));
 
     // UI root
     aw::spoofiq ::UiRoot ui_root(app_state, registry);
@@ -113,11 +109,6 @@ int main() {
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
-        // Handle F1 toggle
-        if (ImGui::IsKeyPressed(ImGuiKey_F1)) {
-            app_state.ui_visible = !app_state.ui_visible;
-        }
-
         // Handle ESC quit
         if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -128,10 +119,8 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // Render UI if visible
-        if (app_state.ui_visible) {
-            ui_root.render();
-        }
+        // Always render UI (no toggle)
+        ui_root.render();
 
         // Rendering
         ImGui::Render();
