@@ -2,12 +2,14 @@
 
 ## Status
 
-**Current Release**: v0.8.0-beta4 ✅
-- Cancellation token + Cancel button
-- Progress bar with file count and percentage
-- Thread-safe atomic updates
-- Events still published to console
-- Next: RC 1 (v0.8.0) - GPS randomization, timestamps
+**Current Release**: v1.0.0 ✅ **RELEASE CANDIDATE**
+- MVP + Alpha 1-3 + Beta 1-4 + RC 1-2 complete
+- Full 3-tab UI: Batch Spoofer, Presets & Devices, Console
+- Device preset management with JSON persistence
+- Event bus integration for real-time logging
+- Batch processing with cancellation + progress bar
+- Input validation + error dialogs
+- 46 passing test assertions
 
 ---
 
