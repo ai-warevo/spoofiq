@@ -1,4 +1,6 @@
 #include <aw/spoofiq/ui/panels/batch_spoofer_panel.hpp>
+#include <aw/spoofiq/event_bus_manager.hpp>
+#include <aw/spoofiq/core/events.hpp>
 #include <imgui.h>
 #include <format>
 #include <sstream>
@@ -118,15 +120,37 @@ void BatchSpooferPanel::process_batch() {
         return;
     }
     
+    // Get event bus
+    auto bus = EventBusManager::get();
+    int total_files = static_cast<int>(input_files.size());
+    
     // Process each file
     int success_count = 0;
     int error_count = 0;
     std::string last_error;
     
-    for (const auto& input : input_files) {
+    for (int i = 0; i < total_files; ++i) {
+        const auto& input = input_files[i];
+        
+        // Publish progress event
+        bus->publish(core::ProgressEvent{
+            .total_files = total_files,
+            .processed_count = i,
+            .current_filename = input.filename().string(),
+            .progress_percent = (100.0f * i) / total_files
+        });
+        
         if (!std::filesystem::exists(input)) {
             last_error = std::format("Not found: {}", input.string());
             error_count++;
+            
+            // Publish failure event
+            bus->publish(core::FileFinishedEvent{
+                .input_filename = input.filename().string(),
+                .output_filename = "",
+                .success = false,
+                .error_message = last_error
+            });
             continue;
         }
         
@@ -140,8 +164,25 @@ void BatchSpooferPanel::process_batch() {
         if (!result) {
             last_error = result.error();
             error_count++;
+            
+            // Publish failure event
+            bus->publish(core::FileFinishedEvent{
+                .input_filename = input.filename().string(),
+                .output_filename = filename,
+                .success = false,
+                .error_message = last_error
+            });
         } else {
             success_count++;
+            
+            // Publish success event
+            bus->publish(core::FileFinishedEvent{
+                .input_filename = input.filename().string(),
+                .output_filename = filename,
+                .success = true,
+                .error_message = ""
+            });
+            
             next_index_++;
         }
     }
@@ -153,6 +194,13 @@ void BatchSpooferPanel::process_batch() {
         status_message_ = std::format("Processed: {} success, {} errors. Last error: {}", 
                                      success_count, error_count, last_error);
     }
+    
+    // Publish batch completed event
+    bus->publish(core::BatchCompletedEvent{
+        .total_images = success_count,
+        .total_videos = 0,
+        .total_errors = error_count
+    });
     
     processing_ = false;
 }

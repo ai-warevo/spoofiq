@@ -215,6 +215,13 @@ aw_add_library(TARGET spoofiq_core_logging TYPE OBJECT
     PUBLIC_INCLUDE_DIRS include
     PUBLIC_LINKS spoofiq_core_types spdlog::spdlog imgui)
 
+# ── Modular spoofiq_core: Event Bus Manager (Beta 3) ──────────────────────────
+aw_add_library(TARGET spoofiq_core_event_bus TYPE OBJECT
+    SOURCES
+        src/event_bus_manager.cpp
+    PUBLIC_INCLUDE_DIRS include
+    PUBLIC_LINKS spoofiq_core_types aw::tobus)
+
 # ── Legacy spoofiq_core modules (to migrate) ──────────────────────────────────
 aw_add_library(TARGET spoofiq_core_legacy TYPE OBJECT
     SOURCES
@@ -234,6 +241,7 @@ aw_add_library(TARGET spoofiq_core TYPE STATIC ALIAS aw::spoofiq::core
         spoofiq_core_proc_video
         spoofiq_core_config
         spoofiq_core_logging
+        spoofiq_core_event_bus
         spoofiq_core_legacy
         aw::tpl aw::tobus Threads::Threads)
 

@@ -1,6 +1,8 @@
 #include <aw/spoofiq/ui.hpp>
 #include <aw/spoofiq/config.hpp>
 #include <aw/spoofiq/core/types.hpp>
+#include <aw/spoofiq/ui/panels/console_panel.hpp>
+#include <format>
 
 #include <imgui.h>
 
@@ -72,9 +74,24 @@ void UiRoot::render() {
                 ImGui::EndTabItem();
             }
 
-            // Tab 3: Console
-            if (ImGui::BeginTabItem("Console")) {
+            // Tab 3: Console (with unread badge)
+            int console_unread = 0;
+            if (auto console_panel = registry_.get_panel(PanelId::Console)) {
+                if (auto* cp = dynamic_cast<aw::spoofiq::ui::ConsolePanel*>(console_panel.get())) {
+                    console_unread = cp->get_unread_count();
+                }
+            }
+            
+            std::string console_label = console_unread > 0 
+                ? std::format("Console ({})", console_unread)
+                : "Console";
+            
+            if (ImGui::BeginTabItem(console_label.c_str())) {
                 if (auto console_panel = registry_.get_panel(PanelId::Console)) {
+                    // Mark as read when viewing
+                    if (auto* cp = dynamic_cast<aw::spoofiq::ui::ConsolePanel*>(console_panel.get())) {
+                        cp->mark_read();
+                    }
                     console_panel->render();
                 } else {
                     ImGui::TextWrapped("Console panel not registered.");

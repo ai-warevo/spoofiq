@@ -14,6 +14,7 @@
 #include <aw/spoofiq/ui/panels/batch_spoofer_panel.hpp>
 #include <aw/spoofiq/ui/panels/console_panel.hpp>
 #include <aw/spoofiq/logger.hpp>
+#include <aw/spoofiq/event_bus_manager.hpp>
 
     namespace {
     void glfw_error_callback(int error, const char* description) {
@@ -96,13 +97,16 @@ int main() {
     // Initialize logger
     aw::spoofiq::Logger::init();
 
+    // Initialize event bus
+    aw::spoofiq::EventBusManager::init();
+
     // Application state and registry
     aw::spoofiq ::AppState app_state;
     aw::spoofiq ::PanelRegistry registry;
 
     // Register panels
     registry.register_panel(std::make_shared<aw::spoofiq::ui::BatchSpooferPanel>());
-    // ConsolePanel deferred to Beta 1 (needs Logger init)
+    registry.register_panel(std::make_shared<aw::spoofiq::ui::ConsolePanel>());
 
     // UI root
     aw::spoofiq ::UiRoot ui_root(app_state, registry);
