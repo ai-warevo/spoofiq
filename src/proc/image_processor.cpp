@@ -1,6 +1,7 @@
 #include <aw/spoofiq/proc/image_processor.hpp>
 #include <aw/spoofiq/io/image_io.hpp>
 #include <aw/spoofiq/io/metadata_io.hpp>
+#include <aw/spoofiq/logger.hpp>
 #include <fstream>
 
 namespace aw::spoofiq::proc {
@@ -10,16 +11,21 @@ std::expected<void, std::string> ImageProcessor::process(
     const std::filesystem::path& output,
     const core::ExifData& exif_data
 ) {
+    Logger::get()->info("Processing: {}", input.string());
+    
     // Load image
     auto load_result = io::ImageIO::load(input);
     if (!load_result) {
+        Logger::get()->error("Failed to load {}: {}", input.string(), load_result.error());
         return std::unexpected(load_result.error());
     }
     
     auto& img = load_result.value();
+    Logger::get()->info("Loaded {}x{} with {} channels", img.width, img.height, img.channels);
     
     // Convert RGBA to RGB if needed
     if (img.channels == 4) {
+        Logger::get()->info("Converting RGBA to RGB");
         std::vector<uint8_t> rgb_data(img.width * img.height * 3);
         for (size_t i = 0; i < img.width * img.height; ++i) {
             rgb_data[i * 3 + 0] = img.data[i * 4 + 0];

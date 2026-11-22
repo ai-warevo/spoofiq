@@ -12,6 +12,8 @@
 
 // Panel implementations
 #include <aw/spoofiq/ui/panels/batch_spoofer_panel.hpp>
+#include <aw/spoofiq/ui/panels/console_panel.hpp>
+#include <aw/spoofiq/logger.hpp>
 
     namespace {
     void glfw_error_callback(int error, const char* description) {
@@ -91,13 +93,16 @@ int main() {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
+    // Initialize logger
+    aw::spoofiq::Logger::init();
+
     // Application state and registry
     aw::spoofiq ::AppState app_state;
     aw::spoofiq ::PanelRegistry registry;
 
-    // Register only the BatchSpooferPanel
-    // Presets & Devices and Console tabs are stubs in ui.cpp for now
+    // Register panels
     registry.register_panel(std::make_shared<aw::spoofiq::ui::BatchSpooferPanel>());
+    // ConsolePanel deferred to Beta 1 (needs Logger init)
 
     // UI root
     aw::spoofiq ::UiRoot ui_root(app_state, registry);

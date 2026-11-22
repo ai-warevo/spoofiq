@@ -10,8 +10,9 @@ namespace aw::spoofiq {
 /// Panel identifiers for registration and lookup.
 enum class PanelId : std::uint32_t {
     BatchSpoofer = 0,
-    General = 1,
-    OverlayDemo = 2,
+    Console = 1,
+    General = 2,
+    OverlayDemo = 3,
 };
 
 /// Drawing command types for overlay canvas.

@@ -72,13 +72,13 @@ void UiRoot::render() {
                 ImGui::EndTabItem();
             }
 
-            // Tab 3: Console (stub for Beta 1)
+            // Tab 3: Console
             if (ImGui::BeginTabItem("Console")) {
-                ImGui::TextWrapped("Real-time logging console coming in Beta 1 (v0.5.0)");
-                ImGui::Spacing();
-                ImGui::Bullet(); ImGui::Text("spdlog integration");
-                ImGui::Bullet(); ImGui::Text("ImGuiConsoleSink with ring buffer");
-                ImGui::Bullet(); ImGui::Text("Filterable log levels");
+                if (auto console_panel = registry_.get_panel(PanelId::Console)) {
+                    console_panel->render();
+                } else {
+                    ImGui::TextWrapped("Console panel not registered.");
+                }
                 ImGui::EndTabItem();
             }
 

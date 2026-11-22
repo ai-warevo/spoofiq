@@ -193,7 +193,7 @@ aw_add_library(TARGET spoofiq_core_proc_image TYPE OBJECT
     SOURCES
         src/proc/image_processor.cpp
     PUBLIC_INCLUDE_DIRS include
-    PUBLIC_LINKS spoofiq_core_types spoofiq_core_io_image spoofiq_core_io_metadata)
+    PUBLIC_LINKS spoofiq_core_types spoofiq_core_io_image spoofiq_core_io_metadata spoofiq_core_logging)
 
 # ── Modular spoofiq_core: Processing - Video (stub) ──────────────────────────
 aw_add_library(TARGET spoofiq_core_proc_video TYPE OBJECT
@@ -209,8 +209,12 @@ aw_add_library(TARGET spoofiq_core_config TYPE OBJECT
     PUBLIC_INCLUDE_DIRS include
     PUBLIC_LINKS spoofiq_core_types nlohmann_json::nlohmann_json)
 
-# ── Modular spoofiq_core: Logging (stub, used in Beta 1) ────────────────────
-# (Will add logging/ modules in Beta 1)
+# ── Modular spoofiq_core: Logging (Beta 1) ───────────────────────────────────
+aw_add_library(TARGET spoofiq_core_logging TYPE OBJECT
+    SOURCES
+        src/logging/logger.cpp
+    PUBLIC_INCLUDE_DIRS include
+    PUBLIC_LINKS spoofiq_core_types spdlog::spdlog imgui)
 
 # ── Legacy spoofiq_core modules (to migrate) ──────────────────────────────────
 aw_add_library(TARGET spoofiq_core_legacy TYPE OBJECT
@@ -230,6 +234,7 @@ aw_add_library(TARGET spoofiq_core TYPE STATIC ALIAS aw::spoofiq::core
         spoofiq_core_proc_image
         spoofiq_core_proc_video
         spoofiq_core_config
+        spoofiq_core_logging
         spoofiq_core_legacy
         aw::tpl aw::tobus Threads::Threads)
 
@@ -242,6 +247,7 @@ aw_add_library(TARGET spoofiq_ui TYPE STATIC ALIAS aw::spoofiq::ui
     SOURCES
         src/ui.cpp
         src/ui/panels/batch_spoofer_panel.cpp
+        src/ui/panels/console_panel.cpp
     HEADERS
         include/aw/spoofiq/ui.hpp
         include/aw/spoofiq/spoofiq.hpp
