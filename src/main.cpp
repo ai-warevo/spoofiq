@@ -12,6 +12,7 @@
 
 // Panel implementations
 #include <aw/spoofiq/ui/panels/batch_spoofer_panel.hpp>
+#include <aw/spoofiq/ui/panels/presets_panel.hpp>
 #include <aw/spoofiq/ui/panels/console_panel.hpp>
 #include <aw/spoofiq/logger.hpp>
 #include <aw/spoofiq/event_bus_manager.hpp>
@@ -106,6 +107,7 @@ int main() {
 
     // Register panels
     registry.register_panel(std::make_shared<aw::spoofiq::ui::BatchSpooferPanel>());
+    registry.register_panel(std::make_shared<aw::spoofiq::ui::PresetsPanel>());
     registry.register_panel(std::make_shared<aw::spoofiq::ui::ConsolePanel>());
 
     // UI root

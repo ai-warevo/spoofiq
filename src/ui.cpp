@@ -64,13 +64,13 @@ void UiRoot::render() {
                 ImGui::EndTabItem();
             }
 
-            // Tab 2: Presets & Devices (stub for Alpha 2)
+            // Tab 2: Presets & Devices
             if (ImGui::BeginTabItem("Presets & Devices")) {
-                ImGui::TextWrapped("Device preset management coming in Alpha 2 (v0.3.0)");
-                ImGui::Spacing();
-                ImGui::Bullet(); ImGui::Text("Create/edit/delete device presets");
-                ImGui::Bullet(); ImGui::Text("iPhone 16 Pro Max (default)");
-                ImGui::Bullet(); ImGui::Text("Custom EXIF/GPS profiles");
+                if (auto presets_panel = registry_.get_panel(PanelId::PresetsDevices)) {
+                    presets_panel->render();
+                } else {
+                    ImGui::TextWrapped("Presets & Devices panel not registered.");
+                }
                 ImGui::EndTabItem();
             }
 
