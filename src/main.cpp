@@ -69,8 +69,8 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    // Create window
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "spoofiq GUI", nullptr, nullptr);
+    // Create window with version from CMake
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "spoofiq " APP_VERSION, nullptr, nullptr);
     if (!window) {
         std::cerr << "Failed to create GLFW window\n";
         glfwTerminate();

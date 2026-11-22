@@ -246,6 +246,10 @@ aw_add_library(TARGET spoofiq_ui TYPE STATIC ALIAS aw::spoofiq::ui
     PUBLIC_INCLUDE_DIRS include
     PUBLIC_LINKS aw::spoofiq::core imgui)
 
+# Pass version from VERSION file as compile definition
+target_compile_definitions(spoofiq_ui PRIVATE
+    APP_VERSION="${PROJECT_VERSION}")
+
 if(SPOOFIQ_WARNINGS_AS_ERRORS)
     aw_configure_compiler(TARGET spoofiq_ui STRICT_WARNINGS)
 endif()
@@ -255,6 +259,10 @@ if(SPOOFIQ_BUILD_APP)
     aw_add_executable(TARGET spoofiq_app
         SOURCES src/main.cpp
         LINK_LIBRARIES aw::spoofiq::ui glfw OpenGL::GL)
+
+    # Pass version from VERSION file as compile definition
+    target_compile_definitions(spoofiq_app PRIVATE
+        APP_VERSION="${PROJECT_VERSION}")
 
     if(WIN32)
         if(MSVC)

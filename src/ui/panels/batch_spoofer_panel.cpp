@@ -16,7 +16,7 @@ BatchSpooferPanel::BatchSpooferPanel()
 }
 
 void BatchSpooferPanel::render() {
-    ImGui::Text("Single Image Processing (MVP v0.1.0)");
+    ImGui::Text("Batch Spoofer v" APP_VERSION);
     ImGui::Separator();
     
     ImGui::Spacing();
