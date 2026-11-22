@@ -24,7 +24,7 @@ if(NOT TARGET aw::tpl)
     FetchContent_Declare(
         aw_tpl
         GIT_REPOSITORY https://github.com/ai-warevo/tpl.git
-        GIT_TAG v3.1.0
+        GIT_TAG main
         GIT_SHALLOW ON)
     set(AW_TPL_BUILD_TESTS OFF CACHE BOOL "" FORCE)
     set(AW_TPL_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -202,8 +202,12 @@ aw_add_library(TARGET spoofiq_core_proc_video TYPE OBJECT
     PUBLIC_INCLUDE_DIRS include
     PUBLIC_LINKS spoofiq_core_types)
 
-# ── Modular spoofiq_core: Config (stub, used in Alpha 2) ─────────────────────
-# (Will add config/ modules in Alpha 2)
+# ── Modular spoofiq_core: Config Manager (Alpha 2) ───────────────────────────
+aw_add_library(TARGET spoofiq_core_config TYPE OBJECT
+    SOURCES
+        src/config/config_manager.cpp
+    PUBLIC_INCLUDE_DIRS include
+    PUBLIC_LINKS spoofiq_core_types nlohmann_json::nlohmann_json)
 
 # ── Modular spoofiq_core: Logging (stub, used in Beta 1) ────────────────────
 # (Will add logging/ modules in Beta 1)
@@ -225,6 +229,7 @@ aw_add_library(TARGET spoofiq_core TYPE STATIC ALIAS aw::spoofiq::core
         spoofiq_core_io_image
         spoofiq_core_proc_image
         spoofiq_core_proc_video
+        spoofiq_core_config
         spoofiq_core_legacy
         aw::tpl aw::tobus Threads::Threads)
 
