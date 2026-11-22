@@ -2,11 +2,11 @@
 
 ## Status
 
-**Current Release**: v0.1.0 (MVP) ✅
-- Completed: 2026-11-23T03:15 UTC
-- Single image processing with hardcoded iPhone 16 Pro Max metadata
-- EXIF injection verified with `file` command
-- Next: Alpha 1 (v0.2.0) - Full dependency integration
+**Current Release**: v0.2.0 (Alpha 1) ✅ [In Progress]
+- Modular architecture refactored
+- Core, I/O, and processing layers separated
+- Dependencies (json, spdlog, TagLib) available but not yet consumed
+- Next: Complete testing and tag v0.2.0
 
 ---
 

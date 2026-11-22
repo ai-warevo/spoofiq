@@ -1,6 +1,6 @@
 #pragma once
 
-#include <aw/spoofiq/types.hpp>
+#include <aw/spoofiq/core/types.hpp>
 #include <aw/spoofiq/config.hpp>
 
 #include <string>

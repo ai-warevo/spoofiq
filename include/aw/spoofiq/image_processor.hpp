@@ -6,9 +6,9 @@
 #include <vector>
 #include <cstdint>
 
-namespace spoofiq::mvp {
+namespace aw::spoofiq::core {
 
-// EXIF data structure matching Python piexif approach
+// EXIF data structure for iPhone metadata
 struct ExifData {
     // 0th IFD (Image)
     std::string make = "Apple";
@@ -27,10 +27,10 @@ struct ExifData {
     
     // GPS IFD
     std::string gps_latitude_ref = "N";
-    std::vector<std::pair<uint32_t, uint32_t>> gps_latitude = {{37, 1}, {20, 1}, {5, 1}};  // 37°20'5"N
+    std::vector<std::pair<uint32_t, uint32_t>> gps_latitude = {{37, 1}, {20, 1}, {5, 1}};
     std::string gps_longitude_ref = "W";
-    std::vector<std::pair<uint32_t, uint32_t>> gps_longitude = {{122, 1}, {0, 1}, {32, 1}};  // 122°0'32"W
-    std::pair<uint32_t, uint32_t> gps_altitude = {30, 1};  // 30m
+    std::vector<std::pair<uint32_t, uint32_t>> gps_longitude = {{122, 1}, {0, 1}, {32, 1}};
+    std::pair<uint32_t, uint32_t> gps_altitude = {30, 1};
     uint8_t gps_altitude_ref = 0;
 };
 
@@ -44,7 +44,7 @@ public:
             int output_index);
 
 private:
-    // Build EXIF binary blob (simplified approach for MVP)
+    // Build EXIF binary blob
     static std::vector<uint8_t> build_exif_blob(const ExifData& exif_data);
     
     // Inject EXIF APP1 marker into JPEG data
@@ -53,4 +53,4 @@ private:
         const std::vector<uint8_t>& exif_blob);
 };
 
-} // namespace spoofiq::mvp
+} // namespace aw::spoofiq::core

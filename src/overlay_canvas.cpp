@@ -1,4 +1,4 @@
-#include <aw/spoofiq/types.hpp>
+#include <aw/spoofiq/core/types.hpp>
 
 namespace aw::spoofiq {
 

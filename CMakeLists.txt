@@ -18,7 +18,7 @@ find_package(Threads REQUIRED)
 find_package(OpenGL REQUIRED)
 aw_check_cxx23_runtime()
 
-# ── Dependencies ──────────────────────────────────────────────────────────────
+# ── Core Dependencies ──────────────────────────────────────────────────────────
 # aw::tpl (TPL: Task Parallel Library)
 if(NOT TARGET aw::tpl)
     FetchContent_Declare(
@@ -56,10 +56,11 @@ if(NOT TARGET glfw)
     set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
     set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
     set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_WAYLAND OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(glfw)
 endif()
 
-# Dear ImGui (docking branch) - as static library with backends
+# Dear ImGui (docking branch)
 if(NOT TARGET imgui)
     FetchContent_Declare(
         imgui
@@ -85,28 +86,158 @@ if(NOT TARGET imgui)
     set_target_properties(imgui PROPERTIES CXX_STANDARD 23)
 endif()
 
-# ── Target 1: spoofiq_core (static lib, pure C++23, zero imgui.h) ──
-aw_add_library(TARGET spoofiq_core TYPE STATIC ALIAS aw::spoofiq::core
+# ── Future Dependencies (Alpha 2+) ─────────────────────────────────────────────
+# nlohmann/json (v3.11.3) - Used in Alpha 2
+if(NOT TARGET nlohmann_json)
+    FetchContent_Declare(
+        nlohmann_json
+        GIT_REPOSITORY https://github.com/nlohmann/json.git
+        GIT_TAG v3.11.3
+        GIT_SHALLOW ON)
+    set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
+    set(JSON_Install OFF CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(nlohmann_json)
+endif()
+
+# spdlog (v1.14.1) - Used in Beta 1
+if(NOT TARGET spdlog)
+    FetchContent_Declare(
+        spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+        GIT_TAG v1.14.1
+        GIT_SHALLOW ON)
+    set(SPDLOG_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(SPDLOG_BUILD_EXAMPLE OFF CACHE BOOL "" FORCE)
+    set(SPDLOG_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+    set(SPDLOG_INSTALL OFF CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(spdlog)
+endif()
+
+# Exiv2 (v0.28.3) - Used in Alpha 3
+# DISABLED FOR NOW - has many dependencies (inih, brotli, etc.)
+# Will be properly integrated in Alpha 3
+#if(NOT TARGET exiv2lib)
+#    FetchContent_Declare(
+#        exiv2
+#        GIT_REPOSITORY https://github.com/Exiv2/exiv2.git
+#        GIT_TAG v0.28.3
+#        GIT_SHALLOW ON)
+#    set(EXIV2_BUILD_EXIV2_COMMAND OFF CACHE BOOL "" FORCE)
+#    set(EXIV2_BUILD_UNIT_TESTS OFF CACHE BOOL "" FORCE)
+#    set(EXIV2_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
+#    set(EXIV2_ENABLE_NLS OFF CACHE BOOL "" FORCE)
+#    FetchContent_MakeAvailable(exiv2)
+#endif()
+
+# TagLib (v2.0.2) - Used in Alpha 3
+if(NOT TARGET tag)
+    FetchContent_Declare(
+        taglib
+        GIT_REPOSITORY https://github.com/taglib/taglib.git
+        GIT_TAG v2.0.2
+        GIT_SHALLOW ON)
+    set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
+    set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(taglib)
+endif()
+
+# nativefiledialog-extended (v1.2.1) - Used in Beta 3
+# DISABLED FOR NOW - requires GTK3 on Linux
+# Will be properly integrated in Beta 3
+#if(NOT TARGET nfd)
+#    FetchContent_Declare(
+#        nativefiledialog
+#        GIT_REPOSITORY https://github.com/btzy/nativefiledialog-extended.git
+#        GIT_TAG v1.2.1
+#        GIT_SHALLOW ON)
+#    FetchContent_MakeAvailable(nativefiledialog)
+#endif()
+
+# ── Catch2 (v3) - Testing framework ────────────────────────────────────────────
+if(NOT TARGET Catch2::Catch2WithMain)
+    FetchContent_Declare(
+        Catch2
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG v3.6.0
+        GIT_SHALLOW ON)
+    set(CATCH_INSTALL_DOCS OFF CACHE BOOL "" FORCE)
+    set(CATCH_INSTALL_EXTRAS OFF CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(Catch2)
+endif()
+
+# ── Modular spoofiq_core: Core Types (zero external deps) ───────────────────────
+aw_add_library(TARGET spoofiq_core_types TYPE OBJECT
+    SOURCES
+        src/core/types.cpp
+    PUBLIC_INCLUDE_DIRS include)
+
+# ── Modular spoofiq_core: I/O Metadata Layer ──────────────────────────────────
+aw_add_library(TARGET spoofiq_core_io_metadata TYPE OBJECT
+    SOURCES
+        src/io/metadata_io.cpp
+    PUBLIC_INCLUDE_DIRS include ${CMAKE_CURRENT_SOURCE_DIR}/vendor
+    PUBLIC_LINKS spoofiq_core_types)
+
+# ── Modular spoofiq_core: I/O Image Layer ───────────────────────────────────────
+aw_add_library(TARGET spoofiq_core_io_image TYPE OBJECT
+    SOURCES
+        src/io/image_io.cpp
+    PUBLIC_INCLUDE_DIRS include ${CMAKE_CURRENT_SOURCE_DIR}/vendor
+    PUBLIC_LINKS spoofiq_core_types spoofiq_core_io_metadata)
+
+# ── Modular spoofiq_core: Processing - Image ──────────────────────────────────
+aw_add_library(TARGET spoofiq_core_proc_image TYPE OBJECT
+    SOURCES
+        src/proc/image_processor.cpp
+    PUBLIC_INCLUDE_DIRS include
+    PUBLIC_LINKS spoofiq_core_types spoofiq_core_io_image)
+
+# ── Modular spoofiq_core: Processing - Video (stub) ──────────────────────────
+aw_add_library(TARGET spoofiq_core_proc_video TYPE OBJECT
+    SOURCES
+        src/proc/video_processor.cpp
+    PUBLIC_INCLUDE_DIRS include
+    PUBLIC_LINKS spoofiq_core_types)
+
+# ── Modular spoofiq_core: Config (stub, used in Alpha 2) ─────────────────────
+# (Will add config/ modules in Alpha 2)
+
+# ── Modular spoofiq_core: Logging (stub, used in Beta 1) ────────────────────
+# (Will add logging/ modules in Beta 1)
+
+# ── Legacy spoofiq_core modules (to migrate) ──────────────────────────────────
+aw_add_library(TARGET spoofiq_core_legacy TYPE OBJECT
     SOURCES
         src/config.cpp
-        src/panel_registry.cpp
         src/overlay_canvas.cpp
-    HEADERS
-        include/aw/spoofiq/config.hpp
-        include/aw/spoofiq/types.hpp
     PUBLIC_INCLUDE_DIRS include
-    PUBLIC_LINKS aw::tpl aw::tobus Threads::Threads)
+    PUBLIC_LINKS spoofiq_core_types)
+
+# ── Aggregate: spoofiq_core (static lib) ───────────────────────────────────────
+aw_add_library(TARGET spoofiq_core TYPE STATIC ALIAS aw::spoofiq::core
+    PUBLIC_INCLUDE_DIRS include ${CMAKE_CURRENT_SOURCE_DIR}/vendor
+    PUBLIC_LINKS
+        spoofiq_core_types
+        spoofiq_core_io_metadata
+        spoofiq_core_io_image
+        spoofiq_core_proc_image
+        spoofiq_core_proc_video
+        spoofiq_core_legacy
+        aw::tpl aw::tobus Threads::Threads)
 
 if(SPOOFIQ_WARNINGS_AS_ERRORS)
     aw_configure_compiler(TARGET spoofiq_core STRICT_WARNINGS)
 endif()
 
-# ── Target 2: spoofiq_ui (static lib, ImGui + spoofiq_core) ──
+# ── Target 2: spoofiq_ui (static lib, ImGui + spoofiq_core) ──────────────────────
 aw_add_library(TARGET spoofiq_ui TYPE STATIC ALIAS aw::spoofiq::ui
     SOURCES
         src/ui.cpp
+        src/ui/ui_root.cpp
         src/panels/general_panel.cpp
         src/panels/overlay_demo_panel.cpp
+        src/ui/panels/batch_spoofer_panel.cpp
     HEADERS
         include/aw/spoofiq/ui.hpp
         include/aw/spoofiq/spoofiq.hpp
@@ -117,13 +248,12 @@ if(SPOOFIQ_WARNINGS_AS_ERRORS)
     aw_configure_compiler(TARGET spoofiq_ui STRICT_WARNINGS)
 endif()
 
-# ── Target 3: spoofiq_app (executable, GLFW + OpenGL host) ──
+# ── Target 3: spoofiq_app (executable, GLFW + OpenGL host) ──────────────────────
 if(SPOOFIQ_BUILD_APP)
     aw_add_executable(TARGET spoofiq_app
         SOURCES src/main.cpp
         LINK_LIBRARIES aw::spoofiq::ui glfw OpenGL::GL)
 
-    # Hide console window on Windows
     if(WIN32)
         if(MSVC)
             target_link_options(spoofiq_app PRIVATE /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup)
@@ -137,7 +267,7 @@ if(SPOOFIQ_BUILD_APP)
     endif()
 endif()
 
-# ── Target 4: spoofiq_overlay (shared lib, embeddable) ──
+# ── Target 4: spoofiq_overlay (shared lib, embeddable) ──────────────────────────
 if(SPOOFIQ_BUILD_OVERLAY)
     set(_overlay_sources src/overlay_common.cpp)
     if(WIN32)
@@ -162,5 +292,5 @@ if(SPOOFIQ_BUILD_OVERLAY)
     endif()
 endif()
 
-# ── Tests (Catch2 v3) ──
+# ── Tests (Catch2 v3) ──────────────────────────────────────────────────────────
 aw_setup_tests(OPTION SPOOFIQ_BUILD_TESTS DIRECTORY tests)

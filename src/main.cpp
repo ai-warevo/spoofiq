@@ -13,6 +13,7 @@
 // Panel implementations
 #include "panels/general_panel.hpp"
 #include "panels/overlay_demo_panel.hpp"
+#include <aw/spoofiq/ui/panels/batch_spoofer_panel.hpp>
 
     namespace {
     void glfw_error_callback(int error, const char* description) {
@@ -98,6 +99,7 @@ int main() {
 
     // Register panels (forward-declared, defined in src/panels/)
     // Note: Panel implementations include their own headers
+    registry.register_panel(std::make_shared<aw::spoofiq::ui::BatchSpooferPanel>());
     registry.register_panel(std::make_shared<aw::spoofiq ::GeneralPanel>(app_state));
     registry.register_panel(std::make_shared<aw::spoofiq ::OverlayDemoPanel>(registry.overlay_canvas()));
 
