@@ -67,7 +67,8 @@ cmake --build build --config Release
   - **UI**: imgui (v1.91.8-docking), GLFW
   - **Config**: nlohmann/json (v3.11.3)
   - **Logging**: spdlog (v1.14.1)
-  - **ai-warevo libraries**: aw_tpl (task scheduling), aw_tobus (event bus), aw_cmake_modules (CMake helpers)
+  - **ai-warevo libraries**: aw_tpl (task scheduling), aw_tobus (event bus)
+- **CMake modules**: aw_cmake_modules from local `../template_cpp/cmake`
 - **Image I/O**: stb_image + stb_image_write (vendored headers)
 - **EXIF**: Manual TIFF/EXIF structure building (no external library)
 
@@ -161,10 +162,10 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Dependencies
 
-**ai-warevo** provides core libraries via FetchContent:
-- **aw_tpl**: Task scheduling and async/await (C++23)
-- **aw_tobus**: Event bus for real-time logging and inter-module communication
-- **aw_cmake_modules**: CMake build helpers and FetchContent integration
+**ai-warevo** provides core libraries:
+- **aw_tpl**: Task scheduling and async/await (C++23) — fetched via FetchContent
+- **aw_tobus**: Event bus for real-time logging and inter-module communication — fetched via FetchContent
+- **aw_cmake_modules**: CMake build helpers — loaded from local `../template_cpp/cmake`
 
 **Credits**
 
@@ -172,4 +173,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 - **stb**: [nothings/stb](https://github.com/nothings/stb)
 - **nlohmann/json**: [nlohmann/json](https://github.com/nlohmann/json)
 - **spdlog**: [gabime/spdlog](https://github.com/gabime/spdlog)
-- **ai-warevo**: Task scheduling (aw_tpl), event bus (aw_tobus), CMake modules (aw_cmake_modules)
+- **ai-warevo**: Task scheduling (aw_tpl), event bus (aw_tobus), CMake modules (template_cpp)

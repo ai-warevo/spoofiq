@@ -342,12 +342,12 @@ void BatchSpooferPanel::process_batch_worker(std::vector<std::filesystem::path> 
         exif.lens_model = preset.lens_model;
         exif.focal_length = preset.focal_length;
         exif.fnumber = preset.f_number;
-        exif.iso_speed = preset.iso;
+        exif.iso_speed = static_cast<uint16_t>(preset.iso);
         
         // GPS handling
         if (settings_.embed_gps) {
-            exif.latitude = preset.base_latitude;
-            exif.longitude = preset.base_longitude;
+            exif.latitude = static_cast<float>(preset.base_latitude);
+            exif.longitude = static_cast<float>(preset.base_longitude);
             
             // TODO: apply GPS randomization if enabled
             if (settings_.randomize_gps && settings_.gps_radius_meters > 0.0f) {
