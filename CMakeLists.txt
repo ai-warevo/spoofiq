@@ -151,7 +151,7 @@ endif()
 #endif()
 
 # ── Catch2 (v3) - Testing framework ────────────────────────────────────────────
-if(NOT TARGET Catch2::Catch2WithMain)
+if(SPOOFIQ_BUILD_TESTS AND NOT TARGET Catch2::Catch2WithMain)
     FetchContent_Declare(
         Catch2
         GIT_REPOSITORY https://github.com/catchorg/Catch2.git

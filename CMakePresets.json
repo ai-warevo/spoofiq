@@ -38,7 +38,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_C_COMPILER": "gcc",
-        "CMAKE_CXX_COMPILER": "g++"
+        "CMAKE_CXX_COMPILER": "g++",
+        "SPOOFIQ_BUILD_TESTS": "OFF"
       }
     },
     {
@@ -58,7 +59,8 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++"
+        "CMAKE_CXX_COMPILER": "clang++",
+        "SPOOFIQ_BUILD_TESTS": "OFF"
       }
     },
     {
@@ -84,7 +86,8 @@
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_CXX_FLAGS": "-stdlib=libc++",
         "CMAKE_EXE_LINKER_FLAGS": "-stdlib=libc++",
-        "CMAKE_SHARED_LINKER_FLAGS": "-stdlib=libc++"
+        "CMAKE_SHARED_LINKER_FLAGS": "-stdlib=libc++",
+        "SPOOFIQ_BUILD_TESTS": "OFF"
       }
     },
     {
@@ -107,7 +110,8 @@
       "binaryDir": "${sourceDir}/build/Release-msvc",
       "generator": "Visual Studio 18 2026",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "SPOOFIQ_BUILD_TESTS": "OFF"
       },
       "condition": {
         "type": "equals",
