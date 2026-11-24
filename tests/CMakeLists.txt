@@ -13,7 +13,6 @@ FetchContent_MakeAvailable(Catch2)
 
 # Test executable
 add_executable(spoofiq_tests
-    config_tests.cpp
     config_manager_tests.cpp
     panel_registry_tests.cpp
     overlay_canvas_tests.cpp

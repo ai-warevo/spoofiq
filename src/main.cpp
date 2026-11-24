@@ -9,7 +9,6 @@
 #include <memory>
 
 /* Panel implementations */
-#include <aw/spoofiq/core/config.hpp>
 #include <aw/spoofiq/ui/ui.hpp>
 #include <aw/spoofiq/ui/panels/batch_spoofer_panel.hpp>
 #include <aw/spoofiq/ui/panels/presets_panel.hpp>
@@ -99,8 +98,7 @@ int main() {
     /* Initialize event bus */
     aw::spoofiq::EventBusManager::init();
 
-    /* Application state and registry */
-    aw::spoofiq ::AppState app_state;
+    /* Application registry */
     aw::spoofiq ::PanelRegistry registry;
 
     /* Register panels */
@@ -110,10 +108,10 @@ int main() {
     registry.register_panel(std::make_shared<aw::spoofiq::ui::AppearancePanel>());
 
     /* UI root */
-    aw::spoofiq ::UiRoot ui_root(app_state, registry);
+    aw::spoofiq ::UiRoot ui_root(registry);
 
     /* Setup initial style */
-    setup_imgui_style(app_state.dark_mode);
+    setup_imgui_style(false);
     
 #ifndef NDEBUG
     bool show_style_editor = false;

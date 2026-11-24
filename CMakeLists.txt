@@ -246,10 +246,9 @@ aw_add_library(TARGET spoofiq_core_event_bus TYPE OBJECT
     PUBLIC_INCLUDE_DIRS include
     PUBLIC_LINKS spoofiq_core_types aw::tobus)
 
-# ── Modular spoofiq_core: Config & Canvas (Core state) ────────────────────────
+# ── Modular spoofiq_core: Canvas (Overlay drawing state) ────────────────────────
 aw_add_library(TARGET spoofiq_core_state TYPE OBJECT
     SOURCES
-        src/core/config.cpp
         src/core/overlay_canvas.cpp
     PUBLIC_INCLUDE_DIRS include
     PUBLIC_LINKS spoofiq_core_types)

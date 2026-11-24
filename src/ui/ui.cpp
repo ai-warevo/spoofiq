@@ -1,5 +1,4 @@
 #include <aw/spoofiq/ui/ui.hpp>
-#include <aw/spoofiq/core/config.hpp>
 #include <aw/spoofiq/core/types.hpp>
 #include <aw/spoofiq/ui/panels/console_panel.hpp>
 #include <aw/spoofiq/ui/error_dialog.hpp>
@@ -9,9 +8,8 @@
 
 namespace aw::spoofiq {
 
-    UiRoot::UiRoot(AppState& state, PanelRegistry& registry)
-    : state_(state),
-      registry_(registry) {}
+    UiRoot::UiRoot(PanelRegistry& registry)
+    : registry_(registry) {}
 
 void UiRoot::render() {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
