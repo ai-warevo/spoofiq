@@ -37,23 +37,27 @@ BatchSpooferPanel::BatchSpooferPanel() {
     event_bus_ = EventBusManager::get();
     if (event_bus_) {
         // Subscribe to progress events with async adapter
-        event_bus_->subscribe<core::ProgressEvent>(
-            [this](const core::ProgressEvent& evt) -> aw::tpl::threading::tasks::Task<void> {
-                handle_progress_event(evt);
-                co_return;
-            });
+        // (Subscriptions kept alive by event bus for panel lifetime)
+        static_cast<void>(
+            event_bus_->subscribe<core::ProgressEvent>(
+                [this](const core::ProgressEvent& evt) -> aw::tpl::threading::tasks::Task<void> {
+                    handle_progress_event(evt);
+                    co_return;
+                }));
         // Subscribe to file finished events
-        event_bus_->subscribe<core::FileFinishedEvent>(
-            [this](const core::FileFinishedEvent& evt) -> aw::tpl::threading::tasks::Task<void> {
-                handle_file_finished_event(evt);
-                co_return;
-            });
+        static_cast<void>(
+            event_bus_->subscribe<core::FileFinishedEvent>(
+                [this](const core::FileFinishedEvent& evt) -> aw::tpl::threading::tasks::Task<void> {
+                    handle_file_finished_event(evt);
+                    co_return;
+                }));
         // Subscribe to batch completed events
-        event_bus_->subscribe<core::BatchCompletedEvent>(
-            [this](const core::BatchCompletedEvent& evt) -> aw::tpl::threading::tasks::Task<void> {
-                handle_batch_completed_event(evt);
-                co_return;
-            });
+        static_cast<void>(
+            event_bus_->subscribe<core::BatchCompletedEvent>(
+                [this](const core::BatchCompletedEvent& evt) -> aw::tpl::threading::tasks::Task<void> {
+                    handle_batch_completed_event(evt);
+                    co_return;
+                }));
     }
 }
 
