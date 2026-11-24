@@ -238,7 +238,7 @@ int main(int argc, char* argv[]) {
 
     /* Subscribe to theme change events for title bar updates */
     auto event_bus = aw::spoofiq::EventBusManager::get();
-    event_bus->subscribe<aw::spoofiq::core::ThemeChangeEvent>(
+    [[maybe_unused]] auto subscription = event_bus->subscribe<aw::spoofiq::core::ThemeChangeEvent>(
         [window](const aw::spoofiq::core::ThemeChangeEvent& event) -> aw::tpl::threading::tasks::Task<void> {
             update_titlebar_theme(window, event.theme_name);
             co_return;
