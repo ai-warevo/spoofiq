@@ -1,5 +1,3 @@
-#include <aw/spoofiq/spoofiq.hpp>
-
 #include "gl_loader.hpp"
 #include <GLFW/glfw3.h>
 #include <imgui.h>
@@ -11,6 +9,8 @@
 #include <memory>
 
 // Panel implementations
+#include <aw/spoofiq/core/config.hpp>
+#include <aw/spoofiq/ui/ui.hpp>
 #include <aw/spoofiq/ui/panels/batch_spoofer_panel.hpp>
 #include <aw/spoofiq/ui/panels/presets_panel.hpp>
 #include <aw/spoofiq/ui/panels/console_panel.hpp>

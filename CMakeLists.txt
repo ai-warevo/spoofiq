@@ -284,7 +284,6 @@ aw_add_library(TARGET spoofiq_ui TYPE STATIC ALIAS aw::spoofiq::ui
         src/ui/panels/appearance_panel.cpp
     HEADERS
         include/aw/spoofiq/ui/ui.hpp
-        include/aw/spoofiq/spoofiq.hpp
     PUBLIC_INCLUDE_DIRS include
     PUBLIC_LINKS aw::spoofiq::core imgui)
 
