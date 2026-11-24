@@ -31,8 +31,7 @@ public:
         const DevicePreset& device_preset,
         int start_index,
         std::atomic<bool>& cancel_flag,
-        std::atomic<int>& processed_count,
-        int total_files);
+        std::atomic<int>& processed_count);
 
 private:
     /// Process a single file (image or video).

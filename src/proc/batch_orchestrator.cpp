@@ -32,8 +32,7 @@ std::expected<BatchOrchestrator::BatchResult, std::string> BatchOrchestrator::pr
     const DevicePreset& device_preset,
     int start_index,
     std::atomic<bool>& cancel_flag,
-    std::atomic<int>& processed_count,
-    int total_files) {
+    std::atomic<int>& processed_count) {
 
     BatchResult result;
     std::atomic<int> atomic_index{start_index};
@@ -64,7 +63,7 @@ std::expected<BatchOrchestrator::BatchResult, std::string> BatchOrchestrator::pr
             Logger::error("{}", full_error);
         }
 
-        processed_count.store(i + 1);
+        processed_count.store(static_cast<int>(i + 1));
     }
 
     Logger::info("Batch finished: {} success, {} errors", result.success_count, result.error_count);

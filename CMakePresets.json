@@ -96,7 +96,8 @@
       "binaryDir": "${sourceDir}/build/Debug-msvc",
       "generator": "Visual Studio 18 2026",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "SPOOFIQ_BUILD_TESTS": "OFF"
       },
       "condition": {
         "type": "equals",

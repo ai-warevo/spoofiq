@@ -33,8 +33,7 @@ aw::tpl::threading::tasks::Task<BatchOrchestrator::BatchResult> AsyncBatchProces
         device_preset,
         start_index,
         cancel_flag,
-        processed_count,
-        total_files
+        processed_count
     );
 
     if (!batch_result) {

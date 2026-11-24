@@ -24,6 +24,8 @@ aw_project_prepare(NAME spoofiq NAMESPACE aw::spoofiq)
 project(${AW_PROJECT_NAME} VERSION ${AW_PROJECT_VERSION} LANGUAGES CXX)
 aw_project_setup(PREFIX SPOOFIQ BUILD_TESTS BUILD_APP BUILD_OVERLAY)
 
+set(SPOOFIQ_WARNINGS_AS_ERRORS ON CACHE BOOL "Treat warnings as errors")
+
 find_package(Threads REQUIRED)
 find_package(OpenGL REQUIRED)
 aw_check_cxx23_runtime()
@@ -328,8 +330,27 @@ endif()
 
 # ── Target 3: spoofiq_app (executable, GLFW + OpenGL host) ──────────────────────
 if(SPOOFIQ_BUILD_APP)
+    # Windows version resource and icon (Windows only)
+    if(WIN32)
+        include(Windows/WinVersion)
+        aw_win_version(
+            OUTVAR SPOOFIQ_WIN_RESOURCES
+            NAME "Spoofiq"
+            VERSION_MAJOR ${PROJECT_VERSION_MAJOR}
+            VERSION_MINOR ${PROJECT_VERSION_MINOR}
+            VERSION_PATCH ${PROJECT_VERSION_PATCH}
+            COMPANY_NAME "AI-Warevo"
+            COMPANY_COPYRIGHT "Copyright 2024 AI-Warevo"
+            FILE_DESCRIPTION "Media metadata spoofing tool"
+            COMMENTS "Spoofiq v${PROJECT_VERSION}"
+            ORIGINAL_FILENAME "spoofiq.exe"
+            INTERNAL_NAME "spoofiq"
+            ICON "${CMAKE_SOURCE_DIR}/product.ico"
+        )
+    endif()
+
     aw_add_executable(TARGET spoofiq_app
-        SOURCES src/main.cpp
+        SOURCES src/main.cpp ${SPOOFIQ_WIN_RESOURCES}
         LINK_LIBRARIES aw::spoofiq::ui glfw OpenGL::GL)
 
     # Pass version from VERSION file as compile definition
@@ -342,6 +363,16 @@ if(SPOOFIQ_BUILD_APP)
         elseif(MINGW)
             target_link_options(spoofiq_app PRIVATE -mwindows)
         endif()
+    endif()
+
+    # Windows code signing (Windows only)
+    # Certificate setup: see template_cpp/tools/create_cert.ps1
+    if(WIN32)
+        include(Windows/CodeSign)
+        aw_code_sign_target(
+            TARGET spoofiq_app
+            CERT_NAME "AI-Warevo Code Signing"
+        )
     endif()
 
     if(SPOOFIQ_WARNINGS_AS_ERRORS)
