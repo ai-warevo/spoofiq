@@ -7,6 +7,16 @@
 #include <cstdlib>
 #include <iostream>
 #include <memory>
+#include <filesystem>
+#include <vector>
+
+#ifdef _WIN32
+    #define GLFW_EXPOSE_NATIVE_WIN32
+    #include <GLFW/glfw3native.h>
+    #include <windows.h>
+    #include <dwmapi.h>
+    #pragma comment(lib, "dwmapi.lib")
+#endif
 
 /* CLI mode */
 #include <aw/spoofiq/cli/cli_parser.hpp>
@@ -20,12 +30,60 @@
 #include <aw/spoofiq/ui/panels/appearance_panel.hpp>
 #include <aw/spoofiq/logging/logger.hpp>
 #include <aw/spoofiq/event_bus/event_bus_manager.hpp>
+#include <aw/spoofiq/core/events.hpp>
 #include <aw/spoofiq/proc/task_executor.hpp>
 #include <aw/spoofiq/config/config_manager.hpp>
 
     namespace {
     void glfw_error_callback(int error, const char* description) {
         std::cerr << "GLFW Error " << error << ": " << description << "\n";
+    }
+
+    void set_window_icon(GLFWwindow* window) {
+#ifdef _WIN32
+        /* On Windows, retrieve the application icon from the executable
+           and assign it to the window for title bar and taskbar display. */
+        HWND hwnd = glfwGetWin32Window(window);
+        if (hwnd) {
+            HICON icon = LoadIconW(GetModuleHandleW(nullptr), L"IDI_ICON1");
+            if (icon) {
+                SendMessageW(hwnd, WM_SETICON, ICON_BIG, reinterpret_cast<LPARAM>(icon));
+                SendMessageW(hwnd, WM_SETICON, ICON_SMALL, reinterpret_cast<LPARAM>(icon));
+            }
+        }
+#else
+        /* On other platforms, icon handling is platform-specific or not critical.
+           GLFW will use platform defaults. */
+        (void)window;
+#endif
+    }
+
+    void update_titlebar_theme(GLFWwindow* window, const std::string& theme_name) {
+#ifdef _WIN32
+        HWND hwnd = glfwGetWin32Window(window);
+        if (!hwnd) return;
+
+        /* Determine if theme is dark mode */
+        BOOL dark_mode = (theme_name != "Light");
+
+        /* Set immersive dark mode */
+        DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark_mode, sizeof(dark_mode));
+
+        /* Set caption color based on theme */
+        COLORREF caption_color;
+        if (theme_name == "Dark") {
+            caption_color = RGB(0x0A, 0x0D, 0x12);  // #0A0D12
+        } else if (theme_name == "Midnight") {
+            caption_color = RGB(0x05, 0x07, 0x0C);  // #05070C
+        } else { /* Light */
+            caption_color = RGB(0xFF, 0xFF, 0xFF);  // #FFFFFF
+        }
+
+        DwmSetWindowAttribute(hwnd, DWMWA_CAPTION_COLOR, &caption_color, sizeof(caption_color));
+#else
+        (void)window;
+        (void)theme_name;
+#endif
     }
 
     void setup_imgui_style(bool dark_mode) {
@@ -131,6 +189,8 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    set_window_icon(window);
+
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
@@ -151,6 +211,15 @@ int main(int argc, char* argv[]) {
     /* Initialize task executor */
     aw::spoofiq::proc::TaskExecutor::init();
 
+    /* Load application settings */
+    auto settings_result = aw::spoofiq::ConfigManager::load();
+    bool dark_mode = true;  // Default to dark
+    std::string theme_name = "Dark";
+    if (settings_result) {
+        dark_mode = (settings_result->theme != "Light");
+        theme_name = settings_result->theme;
+    }
+
     /* Application registry */
     aw::spoofiq ::PanelRegistry registry;
 
@@ -163,9 +232,19 @@ int main(int argc, char* argv[]) {
     /* UI root */
     aw::spoofiq ::UiRoot ui_root(registry);
 
-    /* Setup initial style */
-    setup_imgui_style(false);
-    
+    /* Setup initial style with saved theme */
+    setup_imgui_style(dark_mode);
+    update_titlebar_theme(window, theme_name);
+
+    /* Subscribe to theme change events for title bar updates */
+    auto event_bus = aw::spoofiq::EventBusManager::get();
+    event_bus->subscribe<aw::spoofiq::core::ThemeChangeEvent>(
+        [window](const aw::spoofiq::core::ThemeChangeEvent& event) -> aw::tpl::threading::tasks::Task<void> {
+            update_titlebar_theme(window, event.theme_name);
+            co_return;
+        });
+
+
 #ifndef NDEBUG
     bool show_style_editor = false;
 #endif
@@ -178,7 +257,7 @@ int main(int argc, char* argv[]) {
         if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
-        
+
 #ifndef NDEBUG
         // F12 toggles style editor in debug builds only
         if (ImGui::IsKeyPressed(ImGuiKey_F12)) {
@@ -193,7 +272,7 @@ int main(int argc, char* argv[]) {
 
         /* Always render UI (no toggle) */
         ui_root.render();
-        
+
 #ifndef NDEBUG
         // Developer-only: show ImGui style editor when toggled
         if (show_style_editor) {

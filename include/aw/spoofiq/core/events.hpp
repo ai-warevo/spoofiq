@@ -34,6 +34,11 @@ struct BatchCompletedEvent {
 /// Batch processing cancelled
 struct BatchCancelledEvent {};
 
+/// Theme changed by user
+struct ThemeChangeEvent {
+    std::string theme_name;  // "Dark", "Light", or "Midnight"
+};
+
 } // namespace aw::spoofiq::core
 
 #endif // AW_SPOOFIQ_CORE_EVENTS_HPP

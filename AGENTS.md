@@ -121,3 +121,27 @@ Tests cover:
 - Keep this file (AGENTS.md) up-to-date with new rules
 - Link to code examples when rules are complex
 - Document platform-specific behavior in relevant modules
+
+## Async Architecture: aw::tobus and aw::tpl
+
+**Use aw::tobus (event bus) for UI ↔ Core communication instead of direct coupling.**
+
+- **Never pass window handles, callbacks, or UI state to core/business logic.** This creates tight coupling and makes code hard to test.
+- **Define events in `include/aw/spoofiq/core/events.hpp`.** UI changes (theme, settings) and core updates (progress, completion) go through the event bus.
+- **Publishers emit events; subscribers react.** Use `EventBusManager::get()->publish(event)` for sends and `event_bus->subscribe<EventType>(handler)` for receives.
+- **Example:** Instead of `AppearancePanel::set_window_handle(window)` + direct DWM calls, emit `ThemeChangeEvent` and subscribe in `main.cpp` to handle platform-specific updates.
+
+**Use aw::tpl for background work instead of blocking the UI thread.**
+
+- **Never block ImGui's render loop** with long-running operations (file I/O, image processing, batch work).
+- **Delegate to `TaskExecutor`** via `aw::tpl` coroutines. Publish completion events when done.
+- **Example:** Batch processing publishes `ProgressEvent`, `FileFinishedEvent`, `BatchCompletedEvent` instead of calling UI methods directly.
+
+**Benefits:**
+- ✅ Core logic has zero dependency on UI/platform code
+- ✅ Testable: mock the event bus instead of UI fixtures
+- ✅ Responsive: long work doesn't freeze the frame
+- ✅ Scalable: add new subscribers without changing publishers
+- ✅ Platform-agnostic: Windows DWM updates, Linux DDE, macOS NSApp all react to the same event
+
+

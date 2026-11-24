@@ -59,16 +59,23 @@ endif()
 
 # GLFW (windowing + input)
 if(NOT TARGET glfw)
+    # Platform-specific GLFW options
+    set(_glfw_options
+        GLFW_BUILD_DOCS OFF
+        GLFW_BUILD_TESTS OFF
+        GLFW_BUILD_EXAMPLES OFF
+        GLFW_INSTALL OFF)
+    
+    if(UNIX AND NOT APPLE)
+        # Linux: use X11 only (disable Wayland to avoid wayland-scanner requirement)
+        list(APPEND _glfw_options GLFW_BUILD_X11 ON GLFW_BUILD_WAYLAND OFF)
+    endif()
+    
     aw_fetch_dependency(
         NAME glfw
         GIT_REPOSITORY https://github.com/glfw/glfw.git
         GIT_TAG 3.4
-        OPTIONS
-            GLFW_BUILD_DOCS OFF
-            GLFW_BUILD_TESTS OFF
-            GLFW_BUILD_EXAMPLES OFF
-            GLFW_INSTALL OFF
-            GLFW_BUILD_WAYLAND OFF)
+        OPTIONS ${_glfw_options})
 endif()
 
 # Dear ImGui (docking branch)
@@ -323,8 +330,11 @@ if(SPOOFIQ_BUILD_APP)
     if(WIN32)
         if(MSVC)
             target_link_options(spoofiq_app PRIVATE /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup)
+            # Link dwmapi for DWM title bar theming
+            target_link_libraries(spoofiq_app PRIVATE dwmapi)
         elseif(MINGW)
             target_link_options(spoofiq_app PRIVATE -mwindows)
+            target_link_libraries(spoofiq_app PRIVATE dwmapi)
         endif()
     endif()
 

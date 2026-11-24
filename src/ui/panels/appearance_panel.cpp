@@ -1,6 +1,8 @@
 #include <aw/spoofiq/ui/panels/appearance_panel.hpp>
 #include <imgui.h>
 #include <aw/spoofiq/logging/logger.hpp>
+#include <aw/spoofiq/event_bus/event_bus_manager.hpp>
+#include <aw/spoofiq/core/events.hpp>
 
 namespace aw::spoofiq::ui {
 
@@ -50,6 +52,11 @@ void AppearancePanel::apply_theme(const std::string& theme_name) {
     colors[ImGuiCol_HeaderHovered] = ImVec4(accent.x, accent.y, accent.z, 0.50f);
     colors[ImGuiCol_HeaderActive] = ImVec4(accent.x, accent.y, accent.z, 0.70f);
     colors[ImGuiCol_FrameBgActive] = ImVec4(accent.x, accent.y, accent.z, 0.30f);
+
+    /* Publish theme change event for subscribers (e.g., title bar updater on Windows) */
+    if (auto event_bus = EventBusManager::get()) {
+        event_bus->publish(aw::spoofiq::core::ThemeChangeEvent{theme_name});
+    }
 }
 
 void AppearancePanel::apply_accent_color() {
