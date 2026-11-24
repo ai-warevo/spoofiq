@@ -6,7 +6,7 @@ namespace aw::spoofiq::io {
 
 namespace {
 
-// TIFF/EXIF tags
+/* TIFF/EXIF tags */
 constexpr uint16_t TAG_MAKE = 0x010F;
 constexpr uint16_t TAG_MODEL = 0x0110;
 constexpr uint16_t TAG_ORIENTATION = 0x0112;
@@ -14,7 +14,7 @@ constexpr uint16_t TAG_SOFTWARE = 0x0131;
 constexpr uint16_t TAG_EXIF_OFFSET = 0x8769;
 constexpr uint16_t TAG_GPS_OFFSET = 0x8825;
 
-// TIFF field types
+/* TIFF field types */
 constexpr uint16_t TYPE_ASCII = 2;
 constexpr uint16_t TYPE_SHORT = 3;
 
@@ -35,23 +35,23 @@ void MetadataIO::write_u32_le(std::vector<uint8_t>& buf, uint32_t val) {
 std::vector<uint8_t> MetadataIO::build_exif_blob(const core::ExifData& exif) {
     std::vector<uint8_t> blob;
     
-    // EXIF header: "Exif\0\0"
+    /* EXIF header: "Exif\0\0" */
     const char exif_header[] = "Exif\0\0";
     blob.insert(blob.end(), exif_header, exif_header + 6);
     
-    // TIFF header: little-endian, magic 42, IFD0 offset
+    /* TIFF header: little-endian, magic 42, IFD0 offset */
     blob.push_back(0x49); blob.push_back(0x49);  // "II"
     write_u16_le(blob, 42);
     write_u32_le(blob, 8);
     
-    // IFD0: 6 entries
+    /* IFD0: 6 entries */
     write_u16_le(blob, 6);
     
     std::vector<uint8_t> ifd0_data;
     std::vector<uint8_t> data_area;
     uint32_t data_offset = 8 + 2 + (6 * 12) + 4;
     
-    // Make (ASCII)
+    /* Make (ASCII) */
     write_u16_le(ifd0_data, TAG_MAKE);
     write_u16_le(ifd0_data, TYPE_ASCII);
     write_u32_le(ifd0_data, static_cast<uint32_t>(exif.make.size()) + 1);
@@ -108,11 +108,11 @@ std::vector<uint8_t> MetadataIO::inject_exif_into_jpeg(
         return jpeg_data;
     }
     
-    // SOI marker
+    /* SOI marker */
     result.push_back(0xFF);
     result.push_back(0xD8);
     
-    // APP1 marker with EXIF
+    /* APP1 marker with EXIF */
     result.push_back(0xFF);
     result.push_back(0xE1);
     

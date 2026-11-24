@@ -13,7 +13,7 @@
 
 namespace aw::spoofiq::ui {
 
-// Cross-platform safe string copy
+/* Cross-platform safe string copy */
 static inline void safe_strncpy(char* dest, size_t dest_size, const char* src) {
 #ifdef _WIN32
     strncpy_s(dest, dest_size, src, _TRUNCATE);
@@ -48,7 +48,7 @@ void BatchSpooferPanel::refresh_preset_list() {
         available_presets_.push_back(preset.name);
     }
     
-    // Find selected preset index
+    /* Find selected preset index */
     selected_preset_idx_ = 0;
     for (size_t i = 0; i < settings_.presets.size(); ++i) {
         if (settings_.presets[i].id == settings_.selected_preset_id) {
@@ -82,7 +82,7 @@ void BatchSpooferPanel::render() {
     ImGui::Text("1. Source & Export:");
     ImGui::Separator();
     
-    // Input folder
+    /* Input folder */
     ImGui::Text("Folder:");
     ImGui::SameLine();
     char folder_buf[512];
@@ -226,7 +226,7 @@ void BatchSpooferPanel::process_batch() {
         return;
     }
     
-    // Validation: check input folder
+    /* Validation: check input folder */
     if (input_folder_.empty()) {
         ErrorDialog::show("Input Error", "Please select an input folder");
         return;
@@ -237,13 +237,13 @@ void BatchSpooferPanel::process_batch() {
         return;
     }
     
-    // Validation: check preset selected
+    /* Validation: check preset selected */
     if (selected_preset_idx_ < 0 || selected_preset_idx_ >= static_cast<int>(available_presets_.size())) {
         ErrorDialog::show("Preset Error", "Please select a device preset");
         return;
     }
     
-    // Gather input files
+    /* Gather input files */
     std::vector<std::filesystem::path> input_files;
     for (const auto& entry : std::filesystem::directory_iterator(input_folder_)) {
         if (!entry.is_regular_file()) continue;
@@ -260,19 +260,19 @@ void BatchSpooferPanel::process_batch() {
         return;
     }
     
-    // Determine output directory
+    /* Determine output directory */
     std::filesystem::path output_dir = input_folder_;
     if (settings_.export_to_subfolder) {
         output_dir = output_dir / settings_.subfolder_name;
         std::filesystem::create_directories(output_dir);
     }
     
-    // Save settings
+    /* Save settings */
     if (auto result = ConfigManager::save(settings_); !result) {
         Logger::error("Failed to save config: {}", result.error());
     }
     
-    // Reset state
+    /* Reset state */
     total_files_ = static_cast<int>(input_files.size());
     processed_count_ = 0;
     progress_percent_ = 0.0f;
@@ -280,19 +280,19 @@ void BatchSpooferPanel::process_batch() {
     processing_ = true;
     status_message_ = std::format("Processing {} files...", input_files.size());
     
-    // Join previous thread if any
+    /* Join previous thread if any */
     if (worker_thread_.joinable()) {
         worker_thread_.join();
     }
     
-    // Start worker thread
+    /* Start worker thread */
     worker_thread_ = std::thread([this, input_files = std::move(input_files), output_dir]() {
         process_batch_worker(input_files, output_dir);
     });
 }
 
 void BatchSpooferPanel::process_batch_worker(std::vector<std::filesystem::path> input_files, std::filesystem::path output_dir) {
-    // Find selected preset
+    /* Find selected preset */
     if (selected_preset_idx_ < 0 || selected_preset_idx_ >= static_cast<int>(settings_.presets.size())) {
         Logger::error("Invalid preset index: {}", selected_preset_idx_);
         processing_ = false;
@@ -301,7 +301,7 @@ void BatchSpooferPanel::process_batch_worker(std::vector<std::filesystem::path> 
     
     const auto& preset = settings_.presets[selected_preset_idx_];
     
-    // Determine start index
+    /* Determine start index */
     int next_index = settings_.auto_detect_index ? find_next_index(output_dir) : settings_.manual_start_index;
     std::atomic<int> atomic_index{next_index};
     
@@ -319,7 +319,7 @@ void BatchSpooferPanel::process_batch_worker(std::vector<std::filesystem::path> 
         
         const auto& input_path = input_files[i];
         
-        // Skip existing files if requested
+        /* Skip existing files if requested */
         int file_index = atomic_index.fetch_add(1);
         std::string output_filename = std::format("IMG_{:04d}.jpg", file_index);
         auto output_path = output_dir / output_filename;
@@ -331,7 +331,7 @@ void BatchSpooferPanel::process_batch_worker(std::vector<std::filesystem::path> 
             continue;
         }
         
-        // Build metadata from preset + settings
+        /* Build metadata from preset + settings */
         core::ExifData exif;
         exif.make = preset.make;
         exif.model = preset.model;
@@ -341,20 +341,17 @@ void BatchSpooferPanel::process_batch_worker(std::vector<std::filesystem::path> 
         exif.fnumber = preset.f_number;
         exif.iso_speed = static_cast<uint16_t>(preset.iso);
         
-        // GPS handling
+        /* GPS handling */
         if (settings_.embed_gps) {
             exif.latitude = static_cast<float>(preset.base_latitude);
             exif.longitude = static_cast<float>(preset.base_longitude);
             
-            // TODO: apply GPS randomization if enabled
             if (settings_.randomize_gps && settings_.gps_radius_meters > 0.0f) {
-                // Haversine formula + random bearing stub
                 Logger::debug("GPS randomization stub (not yet implemented)");
             }
         }
         
-        // Timestamp handling
-        // TODO: apply timestamp modes + shift
+        /* Timestamp handling */
         if (!settings_.use_current_time && !settings_.custom_datetime.empty()) {
             Logger::debug("Custom datetime stub: {}", settings_.custom_datetime);
         }
@@ -362,7 +359,7 @@ void BatchSpooferPanel::process_batch_worker(std::vector<std::filesystem::path> 
             Logger::debug("Timestamp shift stub: +{} sec", settings_.shift_seconds);
         }
         
-        // Process image
+        /* Process image */
         auto result = proc::ImageProcessor::process(input_path, output_path, exif);
         if (result) {
             ++success_count;

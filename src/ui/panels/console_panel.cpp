@@ -12,7 +12,7 @@
 namespace aw::spoofiq::ui {
 
 ConsolePanel::ConsolePanel() {
-    // Subscribe to events from event bus
+    /* Subscribe to events from event bus */
     auto bus = EventBusManager::get();
     
     progress_sub_ = bus->subscribe<core::ProgressEvent>(
@@ -92,10 +92,10 @@ void ConsolePanel::on_batch_completed_event(const core::BatchCompletedEvent& eve
 }
 
 void ConsolePanel::render() {
-    // Mark as read when user views this tab
+    /* Mark as read when user views this tab */
     unread_count_ = 0;
     
-    // Top toolbar: filters + search + buttons
+    /* Top toolbar: filters + search + buttons */
     ImGui::Text("Filters:");
     ImGui::SameLine();
     ImGui::Checkbox("Info", &show_info_);
@@ -129,24 +129,24 @@ void ConsolePanel::render() {
     
     ImGui::Separator();
     
-    // Log display region
+    /* Log display region */
     ImGui::BeginChild("LogRegion", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
     
     for (const auto& entry : log_buffer_) {
-        // Apply level filter
+        /* Apply level filter */
         if ((entry.level == 0 && !show_info_) ||
             (entry.level == 1 && !show_warn_) ||
             (entry.level == 2 && !show_error_)) {
             continue;
         }
         
-        // Apply search filter
+        /* Apply search filter */
         std::string full_line = std::format("[{}] {}", entry.timestamp, entry.message);
         if (!search_filter_.PassFilter(full_line.c_str())) {
             continue;
         }
         
-        // Color based on level
+        /* Color based on level */
         ImVec4 color;
         switch (entry.level) {
             case 1: // warn

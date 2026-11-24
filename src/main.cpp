@@ -8,7 +8,7 @@
 #include <iostream>
 #include <memory>
 
-// Panel implementations
+/* Panel implementations */
 #include <aw/spoofiq/core/config.hpp>
 #include <aw/spoofiq/ui/ui.hpp>
 #include <aw/spoofiq/ui/panels/batch_spoofer_panel.hpp>
@@ -30,7 +30,7 @@
             ImGui::StyleColorsLight();
         }
 
-        // Apply design_sense: dark tonal palette with rounded geometry
+        /* Apply design_sense: dark tonal palette with rounded geometry */
         ImGuiStyle& style = ImGui::GetStyle();
         style.WindowRounding = 8.0f;
         style.FrameRounding = 999.0f; // Pill-shaped buttons
@@ -59,7 +59,7 @@
 } // namespace
 
 int main() {
-    // Initialize GLFW
+    /* Initialize GLFW */
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW\n";
@@ -83,47 +83,47 @@ int main() {
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
-    // Setup Dear ImGui context
+    /* Setup Dear ImGui context */
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-    // Setup Platform/Renderer backends
+    /* Setup Platform/Renderer backends */
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
     aw::spoofiq::Logger::init();
 
-    // Initialize event bus
+    /* Initialize event bus */
     aw::spoofiq::EventBusManager::init();
 
-    // Application state and registry
+    /* Application state and registry */
     aw::spoofiq ::AppState app_state;
     aw::spoofiq ::PanelRegistry registry;
 
-    // Register panels
+    /* Register panels */
     registry.register_panel(std::make_shared<aw::spoofiq::ui::BatchSpooferPanel>());
     registry.register_panel(std::make_shared<aw::spoofiq::ui::PresetsPanel>());
     registry.register_panel(std::make_shared<aw::spoofiq::ui::ConsolePanel>());
     registry.register_panel(std::make_shared<aw::spoofiq::ui::AppearancePanel>());
 
-    // UI root
+    /* UI root */
     aw::spoofiq ::UiRoot ui_root(app_state, registry);
 
-    // Setup initial style
+    /* Setup initial style */
     setup_imgui_style(app_state.dark_mode);
     
 #ifndef NDEBUG
     bool show_style_editor = false;
 #endif
 
-    // Main loop
+    /* Main loop */
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
-        // Handle ESC quit
+        /* Handle ESC quit */
         if (ImGui::IsKeyPressed(ImGuiKey_Escape)) {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }
@@ -135,12 +135,12 @@ int main() {
         }
 #endif
 
-        // Start ImGui frame
+        /* Start ImGui frame */
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // Always render UI (no toggle)
+        /* Always render UI (no toggle) */
         ui_root.render();
         
 #ifndef NDEBUG
@@ -152,7 +152,7 @@ int main() {
         }
 #endif
 
-        // Rendering
+        /* Rendering */
         ImGui::Render();
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
@@ -164,7 +164,7 @@ int main() {
         glfwSwapBuffers(window);
     }
 
-    // Cleanup
+    /* Cleanup */
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
