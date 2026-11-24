@@ -262,6 +262,18 @@ aw_add_library(TARGET spoofiq_core_config TYPE OBJECT
     PUBLIC_INCLUDE_DIRS include
     PUBLIC_LINKS spoofiq_core_types nlohmann_json::nlohmann_json)
 
+# ── Modular spoofiq_core: CLI Parser and Runner ──────────────────────────────
+aw_add_library(TARGET spoofiq_core_cli TYPE OBJECT
+    SOURCES
+        src/cli/cli_parser.cpp
+        src/cli/cli_runner.cpp
+    PUBLIC_INCLUDE_DIRS include
+    PUBLIC_LINKS spoofiq_core_types spoofiq_core_config spoofiq_core_batch_orchestrator spoofiq_core_logging nlohmann_json::nlohmann_json)
+
+# Pass version from VERSION file as compile definition
+target_compile_definitions(spoofiq_core_cli PRIVATE
+    APP_VERSION="${PROJECT_VERSION}")
+
 # ── Modular spoofiq_core: Logging (Beta 1) ───────────────────────────────────
 aw_add_library(TARGET spoofiq_core_logging TYPE OBJECT
     SOURCES
@@ -297,6 +309,7 @@ aw_add_library(TARGET spoofiq_core TYPE STATIC ALIAS aw::spoofiq::core
         spoofiq_core_async_batch_processor
         spoofiq_core_task_executor
         spoofiq_core_config
+        spoofiq_core_cli
         spoofiq_core_logging
         spoofiq_core_event_bus
         spoofiq_core_state

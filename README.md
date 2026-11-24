@@ -99,14 +99,73 @@ See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for module DAG and design decisions.
 
 ## Usage
 
-1. Launch `spoofiq_app`
-2. Go to **Presets & Devices** tab → verify default "iPhone 16 Pro Max" preset exists
-3. Go to **Batch Spoofer** tab:
+### Help and Version
+
+```bash
+spoofiq_app --help          # Show help text
+spoofiq_app -h              # Short form
+spoofiq_app --version       # Show version
+spoofiq_app -v              # Short form
+```
+
+### GUI Mode (Default)
+
+Launch `spoofiq_app` with no arguments to open the GUI:
+
+1. Go to **Presets & Devices** tab → verify default "iPhone 16 Pro Max" preset exists
+2. Go to **Batch Spoofer** tab:
    - Enter folder path (one per line, or single folder)
    - Select preset from dropdown
    - Click **Process Batch**
-4. Output files: `IMG_0001.jpg`, `IMG_0002.jpg`, etc. in same folder
-5. Check **Console** tab for detailed logs
+3. Output files: `IMG_0001.jpg`, `IMG_0002.jpg`, etc. in same folder
+4. Check **Console** tab for detailed logs
+
+### CLI Mode (Agents & Automation)
+
+Run `spoofiq_app` with `--cli` flag for headless batch processing without GUI:
+
+**Basic usage:**
+```bash
+spoofiq_app --cli --path-to-folder /path/to/images --out-dir /path/to/output --preset=iphone_16_pro_max
+```
+
+**Command-line arguments:**
+- `--cli` *(required)* — Enable CLI mode (no GUI/GLFW window)
+- `--path-to-folder <path>` *(required)* — Input folder containing images
+- `--out-dir <path>` *(required)* — Output directory (created if missing)
+- `--preset=<preset_id>` *(required)* — Device preset ID (e.g., `iphone_16_pro_max`)
+- `--start-index <N>` *(optional, default: 1)* — Starting index for IMG_XXXX sequence
+- `--skip-existing` *(optional flag)* — Skip files that already exist in output dir
+- `--randomize-gps` *(optional flag)* — Randomize GPS coordinates
+- `--gps-radius <meters>` *(optional, default: 0.0)* — Radius for GPS randomization
+- `--custom-datetime <ISO-8601>` *(optional)* — Custom EXIF timestamp (e.g., `2024-09-30T14:23:45`)
+- `--shift-timestamp` *(optional flag)* — Shift timestamp per file
+- `--shift-seconds <N>` *(optional)* — Seconds to shift per file
+- `--report <path>` *(optional)* — Write JSON report to file
+
+**Exit codes:**
+- `0` — Success, all files processed
+- `1` — Error (preset not found, folder doesn't exist, batch processing failed, etc.)
+
+**Example with report:**
+```bash
+spoofiq_app --cli \
+  --path-to-folder ./images \
+  --out-dir ./output \
+  --preset=iphone_16_pro_max \
+  --start-index=100 \
+  --report=./report.json
+```
+
+**JSON Report Format:**
+```json
+{
+  "total_files": 42,
+  "success_count": 42,
+  "error_count": 0,
+  "errors": []
+}
+```
 
 ---
 

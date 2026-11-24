@@ -8,6 +8,10 @@
 #include <iostream>
 #include <memory>
 
+/* CLI mode */
+#include <aw/spoofiq/cli/cli_parser.hpp>
+#include <aw/spoofiq/cli/cli_runner.hpp>
+
 /* Panel implementations */
 #include <aw/spoofiq/ui/ui.hpp>
 #include <aw/spoofiq/ui/panels/batch_spoofer_panel.hpp>
@@ -17,6 +21,7 @@
 #include <aw/spoofiq/logging/logger.hpp>
 #include <aw/spoofiq/event_bus/event_bus_manager.hpp>
 #include <aw/spoofiq/proc/task_executor.hpp>
+#include <aw/spoofiq/config/config_manager.hpp>
 
     namespace {
     void glfw_error_callback(int error, const char* description) {
@@ -58,7 +63,53 @@
 
 } // namespace
 
-int main() {
+int main(int argc, char* argv[]) {
+    // Check for --help first
+    if (aw::spoofiq::cli::is_help_requested(argc, argv)) {
+        aw::spoofiq::cli::print_help(argv[0]);
+        return 0;
+    }
+
+    // Check for --version
+    if (aw::spoofiq::cli::is_version_requested(argc, argv)) {
+        aw::spoofiq::cli::print_version();
+        return 0;
+    }
+
+    // Initialize logger early for both CLI and GUI modes
+    aw::spoofiq::Logger::init();
+
+    /* Check for CLI mode */
+    if (aw::spoofiq::cli::is_cli_mode(argc, argv)) {
+        // Parse CLI arguments
+        auto cli_result = aw::spoofiq::cli::parse_cli_args(argc, argv);
+        if (!cli_result) {
+            std::cerr << "CLI Error: " << cli_result.error() << "\n";
+            aw::spoofiq::Logger::error("CLI Parse Error: {}", cli_result.error());
+            return 1;
+        }
+
+        // Load application settings (for presets)
+        auto settings_result = aw::spoofiq::ConfigManager::load();
+        if (!settings_result) {
+            std::cerr << "Config Error: " << settings_result.error() << "\n";
+            aw::spoofiq::Logger::error("Config Load Error: {}", settings_result.error());
+            return 1;
+        }
+
+        // Initialize event bus and task executor
+        aw::spoofiq::EventBusManager::init();
+        aw::spoofiq::proc::TaskExecutor::init();
+
+        // Run CLI
+        int exit_code = aw::spoofiq::cli::run_cli(*cli_result, *settings_result);
+
+        // Shutdown task executor
+        aw::spoofiq::proc::TaskExecutor::shutdown(std::chrono::milliseconds(5000));
+
+        return exit_code;
+    }
+
     /* Initialize GLFW */
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit()) {
@@ -93,8 +144,6 @@ int main() {
     /* Setup Platform/Renderer backends */
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
-
-    aw::spoofiq::Logger::init();
 
     /* Initialize event bus */
     aw::spoofiq::EventBusManager::init();
