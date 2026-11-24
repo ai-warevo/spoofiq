@@ -38,18 +38,38 @@ aw::tpl::threading::tasks::Task<BatchOrchestrator::BatchResult> AsyncBatchProces
     );
 
     if (!batch_result) {
-        Logger::error("Batch processing failed: {}", batch_result.error());
-        publish_event(event_bus, core::BatchCancelledEvent{});
+        std::string error_msg = batch_result.error();
+        Logger::error("Batch processing failed: {}", error_msg);
+        
+        // Publish error context in event
+        publish_event(event_bus, core::BatchCompletedEvent{
+            .total_images = 0,
+            .total_videos = 0,
+            .total_errors = 0,
+            .error_code = 1,
+            .error_message = error_msg
+        });
         co_return result;
     }
 
     result = std::move(*batch_result);
 
-    // Publish completion event
+    // Publish completion event with error details
+    std::string aggregate_errors;
+    if (!result.error_messages.empty()) {
+        // Aggregate first 3 errors for display
+        aggregate_errors = result.error_messages[0];
+        if (result.error_messages.size() > 1) {
+            aggregate_errors += std::format(" (+{} more)", result.error_messages.size() - 1);
+        }
+    }
+
     publish_event(event_bus, core::BatchCompletedEvent{
         .total_images = result.success_count,
         .total_videos = 0,
-        .total_errors = result.error_count
+        .total_errors = result.error_count,
+        .error_code = result.error_count > 0 ? 1 : 0,
+        .error_message = aggregate_errors
     });
 
     Logger::info("Async batch completed: {} success, {} errors", result.success_count, result.error_count);

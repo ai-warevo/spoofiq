@@ -246,6 +246,13 @@ aw_add_library(TARGET spoofiq_core_async_batch_processor TYPE OBJECT
     PUBLIC_INCLUDE_DIRS include
     PUBLIC_LINKS spoofiq_core_types spoofiq_core_batch_orchestrator spoofiq_core_logging aw::tpl aw::tobus)
 
+# ── Modular spoofiq_core: Task Executor (aw::tpl lifecycle management) ──────────────
+aw_add_library(TARGET spoofiq_core_task_executor TYPE OBJECT
+    SOURCES
+        src/proc/task_executor.cpp
+    PUBLIC_INCLUDE_DIRS include
+    PUBLIC_LINKS spoofiq_core_types spoofiq_core_logging aw::tpl)
+
 # ── Modular spoofiq_core: Config Manager (Alpha 2) ───────────────────────────
 aw_add_library(TARGET spoofiq_core_config TYPE OBJECT
     SOURCES
@@ -286,6 +293,7 @@ aw_add_library(TARGET spoofiq_core TYPE STATIC ALIAS aw::spoofiq::core
         spoofiq_core_media_file
         spoofiq_core_batch_orchestrator
         spoofiq_core_async_batch_processor
+        spoofiq_core_task_executor
         spoofiq_core_config
         spoofiq_core_logging
         spoofiq_core_event_bus

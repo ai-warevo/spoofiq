@@ -26,6 +26,8 @@ struct BatchCompletedEvent {
     int total_images = 0;
     int total_videos = 0;
     int total_errors = 0;
+    int error_code = 0;  // 0 = success, non-zero = failure
+    std::string error_message;  // Detailed error or empty if successful
 };
 
 /// Batch processing cancelled

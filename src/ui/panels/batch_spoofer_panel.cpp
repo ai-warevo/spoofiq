@@ -2,6 +2,7 @@
 #include <aw/spoofiq/ui/error_dialog.hpp>
 #include <aw/spoofiq/proc/batch_orchestrator.hpp>
 #include <aw/spoofiq/proc/async_batch_processor.hpp>
+#include <aw/spoofiq/proc/task_executor.hpp>
 #include <aw/spoofiq/event_bus/event_bus_manager.hpp>
 #include <aw/spoofiq/logging/logger.hpp>
 #include <imgui.h>
@@ -90,9 +91,22 @@ void BatchSpooferPanel::handle_file_finished_event(const core::FileFinishedEvent
 
 void BatchSpooferPanel::handle_batch_completed_event(const core::BatchCompletedEvent& event) {
     processing_ = false;
-    status_message_ = std::format("Batch complete | Success: {} | Errors: {}", 
-                                 event.total_images, event.total_errors);
-    Logger::info("Batch finished: {} success, {} errors", event.total_images, event.total_errors);
+    
+    if (event.error_code != 0) {
+        // Batch failed
+        status_message_ = std::format("Batch FAILED | Error: {}", event.error_message);
+        Logger::error("Batch failed: {}", event.error_message);
+    } else if (event.total_errors > 0) {
+        // Some files failed
+        status_message_ = std::format("Batch complete | Success: {} | Errors: {} | {}",
+                                     event.total_images, event.total_errors,
+                                     event.error_message);
+        Logger::info("Batch finished: {} success, {} errors", event.total_images, event.total_errors);
+    } else {
+        // All success
+        status_message_ = std::format("Batch complete | Success: {} files", event.total_images);
+        Logger::info("Batch finished successfully: {} files", event.total_images);
+    }
 }
 
 void BatchSpooferPanel::render() {
@@ -282,9 +296,7 @@ void BatchSpooferPanel::start_batch_processing() {
 
     const auto& preset = settings_.presets[selected_preset_idx_];
 
-    // Spawn async batch processing task
-    // Note: In a full implementation, this would use aw::tpl::Executor to manage the task
-    // For now, we spawn it on a default executor or as a detached coroutine
+    // Spawn async batch processing task via TaskExecutor
     auto task = proc::AsyncBatchProcessor::process_batch_async(
         input_files,
         output_dir,
@@ -294,9 +306,8 @@ void BatchSpooferPanel::start_batch_processing() {
         event_bus_
     );
 
-    // Spawn the task (requires aw::tpl executor integration)
-    // TODO: Integrate with aw::tpl::Executor for proper task lifecycle management
-    Logger::info("Batch task spawned (async processing started)");
+    proc::TaskExecutor::spawn(std::move(task));
+    Logger::info("Batch task spawned on executor (async processing started)");
 }
 
 } // namespace aw::spoofiq::ui

@@ -16,6 +16,7 @@
 #include <aw/spoofiq/ui/panels/appearance_panel.hpp>
 #include <aw/spoofiq/logging/logger.hpp>
 #include <aw/spoofiq/event_bus/event_bus_manager.hpp>
+#include <aw/spoofiq/proc/task_executor.hpp>
 
     namespace {
     void glfw_error_callback(int error, const char* description) {
@@ -98,6 +99,9 @@ int main() {
     /* Initialize event bus */
     aw::spoofiq::EventBusManager::init();
 
+    /* Initialize task executor */
+    aw::spoofiq::proc::TaskExecutor::init();
+
     /* Application registry */
     aw::spoofiq ::PanelRegistry registry;
 
@@ -161,6 +165,9 @@ int main() {
 
         glfwSwapBuffers(window);
     }
+
+    /* Graceful shutdown: wait for pending tasks (5s timeout) */
+    aw::spoofiq::proc::TaskExecutor::shutdown(std::chrono::milliseconds(5000));
 
     /* Cleanup */
     ImGui_ImplOpenGL3_Shutdown();
