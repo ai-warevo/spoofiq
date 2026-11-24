@@ -10,10 +10,14 @@ struct AppState;
 /// Root UI class that orchestrates all panels and rendering.
 class UiRoot {
 public:
-    /// Construct with references to app state and panel registry.
+    /**
+     * Construct with references to app state and panel registry.
+     */
     explicit UiRoot(AppState& state, PanelRegistry& registry);
 
-    /// Render the UI (called each frame within ImGui context).
+    /**
+     * Render the UI (called each frame within ImGui context).
+     */
     void render();
 
 private:

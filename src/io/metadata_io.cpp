@@ -59,7 +59,6 @@ std::vector<uint8_t> MetadataIO::build_exif_blob(const core::ExifData& exif) {
     data_area.insert(data_area.end(), exif.make.begin(), exif.make.end());
     data_area.push_back(0);
     
-    // Model (ASCII)
     write_u16_le(ifd0_data, TAG_MODEL);
     write_u16_le(ifd0_data, TYPE_ASCII);
     write_u32_le(ifd0_data, static_cast<uint32_t>(exif.model.size()) + 1);
@@ -67,14 +66,12 @@ std::vector<uint8_t> MetadataIO::build_exif_blob(const core::ExifData& exif) {
     data_area.insert(data_area.end(), exif.model.begin(), exif.model.end());
     data_area.push_back(0);
     
-    // Orientation (SHORT)
     write_u16_le(ifd0_data, TAG_ORIENTATION);
     write_u16_le(ifd0_data, TYPE_SHORT);
     write_u32_le(ifd0_data, 1);
     write_u16_le(ifd0_data, 1);
     write_u16_le(ifd0_data, 0);
     
-    // Software (ASCII)
     write_u16_le(ifd0_data, TAG_SOFTWARE);
     write_u16_le(ifd0_data, TYPE_ASCII);
     write_u32_le(ifd0_data, static_cast<uint32_t>(exif.software.size()) + 1);
@@ -82,14 +79,12 @@ std::vector<uint8_t> MetadataIO::build_exif_blob(const core::ExifData& exif) {
     data_area.insert(data_area.end(), exif.software.begin(), exif.software.end());
     data_area.push_back(0);
     
-    // ExifOffset placeholder
     uint32_t exif_ifd_offset = data_offset + static_cast<uint32_t>(data_area.size());
     write_u16_le(ifd0_data, TAG_EXIF_OFFSET);
     write_u16_le(ifd0_data, 4);
     write_u32_le(ifd0_data, 1);
     write_u32_le(ifd0_data, exif_ifd_offset);
     
-    // GPSOffset placeholder
     uint32_t gps_ifd_offset = exif_ifd_offset + 200;
     write_u16_le(ifd0_data, TAG_GPS_OFFSET);
     write_u16_le(ifd0_data, 4);

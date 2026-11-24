@@ -7,12 +7,16 @@
 
 namespace aw::spoofiq::proc {
 
-/// Video processing pipeline (stub for Alpha 3).
-/// Will handle loading, metadata injection, and saving video files.
+/**
+ * Video processing pipeline (stub for Alpha 3).
+ * Will handle loading, metadata injection, and saving video files.
+ */
 class VideoProcessor {
 public:
-    /// Process a single video: inject metadata → save as MP4/MOV.
-    /// (Stub - implementation in Alpha 3 when TagLib is integrated)
+    /**
+     * Process a single video: inject metadata → save as MP4/MOV.
+     * (Stub - implementation in Alpha 3 when TagLib is integrated)
+     */
     static std::expected<std::filesystem::path, std::string> 
     process(
         const std::filesystem::path& input_path,

@@ -22,22 +22,18 @@ public:
     void render() override;
 
 private:
-    // Settings (loaded from config)
     AppSettings settings_;
     
-    // UI state
     std::string input_folder_;
     std::vector<std::string> available_presets_; // cached preset names for combo
     int selected_preset_idx_ = 0;
     std::string status_message_;
     std::atomic<bool> processing_{false};
     
-    // Progress tracking (atomic for thread-safe access)
     std::atomic<int> total_files_{0};
     std::atomic<int> processed_count_{0};
     std::atomic<float> progress_percent_{0.0f};
     
-    // Worker thread
     std::thread worker_thread_;
     std::atomic<bool> cancel_flag_{false};
     

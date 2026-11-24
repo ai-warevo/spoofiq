@@ -7,13 +7,11 @@ namespace aw::spoofiq::core {
 
 /// EXIF metadata for image files.
 struct ExifData {
-    // 0th IFD (Image File Directory)
     std::string make = "Apple";
     std::string model = "iPhone 16 Pro Max";
     std::string software = "18.0";
     std::string datetime = "2024:09:30 14:23:45";
 
-    // Exif IFD
     std::uint32_t exif_version = 0x30323330;  // "0230"
     std::string datetime_original = "2024:09:30 14:23:45";
     std::string datetime_digitized = "2024:09:30 14:23:45";
@@ -25,7 +23,6 @@ struct ExifData {
     std::string lens_make = "Apple";
     std::string lens_model = "iPhone 16 Pro Max back triple camera 6.77mm f/1.78";
 
-    // GPS IFD
     float latitude = 37.334722f;   // degrees (N positive, S negative)
     float longitude = -122.008889f; // degrees (E positive, W negative)
     float altitude = 10.0f;         // meters

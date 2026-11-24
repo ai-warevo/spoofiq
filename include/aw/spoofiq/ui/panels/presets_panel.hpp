@@ -18,17 +18,13 @@ public:
     std::string name() const override { return "Presets & Devices"; }
 
 private:
-    // Settings (loaded from config)
     AppSettings settings_;
     
-    // UI state
     int selected_preset_idx_ = 0;
     bool unsaved_changes_ = false;
     
-    // Edited preset (copy of selected, modified in UI)
     DevicePreset edited_preset_;
     
-    // Buffers for new preset creation
     char new_preset_name_[128] = {0};
     
     void render_preset_list();

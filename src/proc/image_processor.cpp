@@ -13,7 +13,6 @@ std::expected<void, std::string> ImageProcessor::process(
 ) {
     Logger::get()->info("Processing: {}", input.string());
     
-    // Load image
     auto load_result = io::ImageIO::load(input);
     if (!load_result) {
         Logger::get()->error("Failed to load {}: {}", input.string(), load_result.error());
@@ -23,7 +22,6 @@ std::expected<void, std::string> ImageProcessor::process(
     auto& img = load_result.value();
     Logger::get()->info("Loaded {}x{} with {} channels", img.width, img.height, img.channels);
     
-    // Convert RGBA to RGB if needed
     if (img.channels == 4) {
         Logger::get()->info("Converting RGBA to RGB");
         std::vector<uint8_t> rgb_data(img.width * img.height * 3);
@@ -36,14 +34,12 @@ std::expected<void, std::string> ImageProcessor::process(
         img.channels = 3;
     }
     
-    // Save to temp location
     std::filesystem::path temp_path = output.parent_path() / ".temp.jpg";
     auto save_result = io::ImageIO::save_jpeg(img, temp_path);
     if (!save_result) {
         return std::unexpected(save_result.error());
     }
     
-    // Load temp JPEG and inject EXIF
     std::ifstream temp_file(temp_path, std::ios::binary);
     if (!temp_file.is_open()) {
         return std::unexpected("Failed to open temp JPEG");
@@ -52,13 +48,10 @@ std::expected<void, std::string> ImageProcessor::process(
     std::vector<uint8_t> jpeg_data((std::istreambuf_iterator<char>(temp_file)), std::istreambuf_iterator<char>());
     temp_file.close();
     
-    // Build EXIF blob
     auto exif_blob = io::MetadataIO::build_exif_blob(exif_data);
     
-    // Inject EXIF
     auto final_jpeg = io::MetadataIO::inject_exif_into_jpeg(jpeg_data, exif_blob);
     
-    // Write final output
     std::ofstream out_file(output, std::ios::binary);
     if (!out_file.is_open()) {
         std::filesystem::remove(temp_path);
@@ -68,7 +61,6 @@ std::expected<void, std::string> ImageProcessor::process(
     out_file.write(reinterpret_cast<const char*>(final_jpeg.data()), final_jpeg.size());
     out_file.close();
     
-    // Clean up temp
     std::filesystem::remove(temp_path);
     
     return {};

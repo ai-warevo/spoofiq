@@ -26,8 +26,7 @@ std::expected<Image, std::string> ImageIO::load(const std::filesystem::path& pat
     Image img;
     img.width = width;
     img.height = height;
-    img.channels = 3;  // forced RGB
-    img.data.assign(data, data + (width * height * 3));
+    img.channels = 3;
 
     stbi_image_free(data);
     return img;

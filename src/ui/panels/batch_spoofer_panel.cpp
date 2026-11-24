@@ -24,7 +24,6 @@ static inline void safe_strncpy(char* dest, size_t dest_size, const char* src) {
 }
 
 BatchSpooferPanel::BatchSpooferPanel() {
-    // Load settings from config
     if (auto result = ConfigManager::load()) {
         settings_ = std::move(*result);
         input_folder_ = settings_.last_input_directory;
@@ -97,7 +96,6 @@ void BatchSpooferPanel::render() {
         status_message_ = "File browser not yet implemented (nfd stub)";
     }
     
-    // Export to subfolder
     ImGui::Checkbox("Export to subfolder:", &settings_.export_to_subfolder);
     if (settings_.export_to_subfolder) {
         ImGui::SameLine();
@@ -108,7 +106,6 @@ void BatchSpooferPanel::render() {
         }
     }
     
-    // Skip existing + Start index
     ImGui::Checkbox("Skip existing (IMG_XXXX)", &settings_.skip_existing_files);
     ImGui::SameLine();
     ImGui::Text("Start Index:");
@@ -127,7 +124,6 @@ void BatchSpooferPanel::render() {
     ImGui::Text("2. Quick Spoofing Settings:");
     ImGui::Separator();
     
-    // Device preset combo
     ImGui::Text("Device Preset:");
     ImGui::SameLine();
     if (ImGui::BeginCombo("##preset_combo", available_presets_.empty() ? "No presets" : available_presets_[selected_preset_idx_].c_str())) {
@@ -144,7 +140,6 @@ void BatchSpooferPanel::render() {
         ImGui::EndCombo();
     }
     
-    // Timestamp mode
     ImGui::Text("Timestamp:");
     ImGui::SameLine();
     bool current_time = settings_.use_current_time;
@@ -165,14 +160,12 @@ void BatchSpooferPanel::render() {
         }
     }
     
-    // Timestamp shift
     ImGui::Checkbox("Shift timestamp per file:", &settings_.shift_timestamp_per_file);
     if (settings_.shift_timestamp_per_file) {
         ImGui::SameLine();
         ImGui::InputInt("sec##shift_sec", &settings_.shift_seconds);
     }
     
-    // GPS controls
     ImGui::Checkbox("Embed GPS", &settings_.embed_gps);
     if (settings_.embed_gps) {
         ImGui::SameLine();
@@ -187,10 +180,8 @@ void BatchSpooferPanel::render() {
     ImGui::Text("3. Execution:");
     ImGui::Separator();
     
-    // Start/Cancel button
     bool is_processing = processing_.load();
     if (!is_processing) {
-        // Count files
         int file_count = 0;
         if (std::filesystem::exists(input_folder_)) {
             for (const auto& entry : std::filesystem::directory_iterator(input_folder_)) {
@@ -217,7 +208,6 @@ void BatchSpooferPanel::render() {
         ImGui::PopStyleColor();
     }
     
-    // Progress bar
     if (is_processing || progress_percent_ > 0.0f) {
         float progress = progress_percent_.load();
         int processed = processed_count_.load();
@@ -226,7 +216,6 @@ void BatchSpooferPanel::render() {
         ImGui::ProgressBar(progress, ImVec2(-1.0f, 0.0f), overlay.c_str());
     }
     
-    // Status
     if (!status_message_.empty()) {
         ImGui::TextWrapped("%s", status_message_.c_str());
     }

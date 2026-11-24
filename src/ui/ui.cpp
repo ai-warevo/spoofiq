@@ -14,13 +14,11 @@ namespace aw::spoofiq {
       registry_(registry) {}
 
 void UiRoot::render() {
-    // Create fullscreen window that fills the entire OS window
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
     ImGui::SetNextWindowViewport(viewport->ID);
 
-    // Fullscreen window flags: no decorations, no moving, no scrollbars
     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration |
                                     ImGuiWindowFlags_NoMove |
                                     ImGuiWindowFlags_NoResize |
@@ -35,12 +33,10 @@ void UiRoot::render() {
     if (ImGui::Begin("##MainWindow", nullptr, window_flags)) {
         ImGui::PopStyleVar(3);
 
-        // Add padding back for content
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(16.0f, 16.0f));
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(12.0f, 8.0f));
 
-        // Application title bar (since we removed OS title bar decorations)
-        ImGui::PushFont(ImGui::GetFont()); // Use default font
+        ImGui::PushFont(ImGui::GetFont());
         ImGui::Text("spoofiq");
         ImGui::SameLine();
         ImGui::TextDisabled("—");
@@ -51,11 +47,8 @@ void UiRoot::render() {
         ImGui::Separator();
         ImGui::Spacing();
 
-        // Main tab bar with 4 tabs
         if (ImGui::BeginTabBar("MainTabs", ImGuiTabBarFlags_None)) {
-            // Tab 1: Batch Spoofer
             if (ImGui::BeginTabItem("Batch Spoofer")) {
-                // Find and render BatchSpooferPanel
                 for (const auto& panel : registry_.panels()) {
                     if (panel->name() == "Batch Spoofer") {
                         panel->render();
@@ -65,7 +58,6 @@ void UiRoot::render() {
                 ImGui::EndTabItem();
             }
 
-            // Tab 2: Presets & Devices
             if (ImGui::BeginTabItem("Presets & Devices")) {
                 if (auto presets_panel = registry_.get_panel(PanelId::PresetsDevices)) {
                     presets_panel->render();
@@ -75,7 +67,6 @@ void UiRoot::render() {
                 ImGui::EndTabItem();
             }
 
-            // Tab 3: Appearance
             if (ImGui::BeginTabItem("Appearance")) {
                 if (auto appearance_panel = registry_.get_panel(PanelId::Appearance)) {
                     appearance_panel->render();
@@ -85,7 +76,6 @@ void UiRoot::render() {
                 ImGui::EndTabItem();
             }
 
-            // Tab 4: Console (with unread badge)
             int console_unread = 0;
             if (auto console_panel = registry_.get_panel(PanelId::Console)) {
                 if (auto* cp = dynamic_cast<aw::spoofiq::ui::ConsolePanel*>(console_panel.get())) {
@@ -99,7 +89,6 @@ void UiRoot::render() {
             
             if (ImGui::BeginTabItem(console_label.c_str())) {
                 if (auto console_panel = registry_.get_panel(PanelId::Console)) {
-                    // Mark as read when viewing
                     if (auto* cp = dynamic_cast<aw::spoofiq::ui::ConsolePanel*>(console_panel.get())) {
                         cp->mark_read();
                     }
@@ -119,7 +108,6 @@ void UiRoot::render() {
     }
     ImGui::End();
     
-    // Render error dialog
     ui::ErrorDialog::render();
 }
 

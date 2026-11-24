@@ -14,7 +14,6 @@ AppearancePanel::AppearancePanel() {
 void AppearancePanel::apply_theme(const std::string& theme_name) {
     ImGuiStyle& style = ImGui::GetStyle();
     
-    // Common rounded geometry
     style.WindowRounding = 8.0f;
     style.FrameRounding = 999.0f;  // Pill-shaped buttons
     style.ScrollbarRounding = 999.0f;
@@ -43,7 +42,6 @@ void AppearancePanel::apply_theme(const std::string& theme_name) {
         colors[ImGuiCol_TitleBgActive] = ImVec4(0.02f, 0.02f, 0.04f, 1.00f);
     }
     
-    // Apply accent color to button/header elements
     ImVec4 accent(settings_.accent_color[0], settings_.accent_color[1], settings_.accent_color[2], 1.0f);
     colors[ImGuiCol_Button] = ImVec4(accent.x, accent.y, accent.z, 0.40f);
     colors[ImGuiCol_ButtonHovered] = ImVec4(accent.x, accent.y, accent.z, 0.60f);
@@ -84,11 +82,9 @@ void AppearancePanel::render() {
     ImGui::Text("User Appearance Settings");
     ImGui::Separator();
     
-    // Theme selector
     static const char* themes[] = {"Dark", "Light", "Midnight"};
     static int theme_idx = 0;
     
-    // Find current theme index
     for (int i = 0; i < 3; ++i) {
         if (settings_.theme == themes[i]) {
             theme_idx = i;
@@ -104,7 +100,6 @@ void AppearancePanel::render() {
     
     ImGui::Spacing();
     
-    // Accent color picker
     ImGui::Text("Accent Color");
     if (ImGui::ColorEdit3("##accent", settings_.accent_color, ImGuiColorEditFlags_PickerHueWheel)) {
         apply_accent_color();
@@ -113,7 +108,6 @@ void AppearancePanel::render() {
     
     ImGui::Spacing();
     
-    // UI Scale slider
     ImGui::Text("UI Scale");
     if (ImGui::SliderFloat("##scale", &settings_.ui_scale, 0.8f, 1.5f, "%.1fx")) {
         apply_ui_scale();

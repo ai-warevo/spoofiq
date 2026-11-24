@@ -17,7 +17,6 @@ static inline void safe_strncpy(char* dest, size_t dest_size, const char* src) {
 }
 
 PresetsPanel::PresetsPanel() {
-    // Load settings from config
     if (auto result = ConfigManager::load()) {
         settings_ = std::move(*result);
         Logger::info("Presets loaded: {} presets available", settings_.presets.size());
@@ -26,7 +25,6 @@ PresetsPanel::PresetsPanel() {
         settings_ = {};
     }
     
-    // Initialize edited preset with first one
     if (!settings_.presets.empty()) {
         selected_preset_idx_ = 0;
         edited_preset_ = settings_.presets[0];
@@ -40,15 +38,12 @@ void PresetsPanel::render() {
     ImGui::Separator();
     ImGui::Spacing();
     
-    // Two-column layout
     ImGui::Columns(2, "presetsLayout", true);
     
-    // Left pane: preset list
     render_preset_list();
     
     ImGui::NextColumn();
     
-    // Right pane: preset editor
     render_preset_editor();
     
     ImGui::Columns(1);
@@ -63,7 +58,6 @@ void PresetsPanel::render_preset_list() {
         bool selected = (i == selected_preset_idx_);
         if (ImGui::Selectable(settings_.presets[i].name.c_str(), selected)) {
             if (selected_preset_idx_ != i) {
-                // Check for unsaved changes
                 if (unsaved_changes_) {
                     Logger::warn("Discarding unsaved changes to preset");
                 }
@@ -78,7 +72,6 @@ void PresetsPanel::render_preset_list() {
     }
     ImGui::EndChild();
     
-    // Action buttons
     if (ImGui::Button("+ New", ImVec2(70, 0))) {
         create_new_preset();
     }
@@ -205,8 +198,6 @@ void PresetsPanel::render_preset_editor() {
 }
 
 void PresetsPanel::create_new_preset() {
-    // Show a simple input dialog to get the name
-    // For now, just create a copy of the current preset with a new name
     if (settings_.presets.empty()) {
         Logger::warn("Cannot create preset: no presets available");
         return;
@@ -285,12 +276,10 @@ void PresetsPanel::reset_edited_preset() {
 }
 
 void PresetsPanel::save_to_config() {
-    // Apply current edits first
     if (unsaved_changes_) {
         apply_edited_preset();
     }
     
-    // Save settings to file
     if (auto result = ConfigManager::save(settings_)) {
         Logger::info("Saved {} presets to config.json", settings_.presets.size());
     } else {

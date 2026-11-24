@@ -23,7 +23,6 @@ struct DevicePreset {
     double base_longitude;
 };
 
-// JSON serialization (ADL)
 void to_json(nlohmann::json& j, const DevicePreset& p);
 void from_json(const nlohmann::json& j, DevicePreset& p);
 
@@ -34,31 +33,25 @@ struct AppSettings {
     bool skip_existing_files;
     bool auto_detect_index;
     int manual_start_index;
-    
-    // Active preset
+
     std::string selected_preset_id;
-    
-    // Timestamp settings
+
     bool use_current_time;
     std::string custom_datetime; // ISO 8601 format
     bool shift_timestamp_per_file;
     int shift_seconds;
-    
-    // GPS settings
+
     bool embed_gps;
     bool randomize_gps;
     float gps_radius_meters;
-    
-    // Appearance settings
+
     std::string theme;         // "Dark", "Light", "Midnight"
     float accent_color[3];     // RGB 0.0-1.0
     float ui_scale;            // 0.8-1.5
-    
-    // Saved presets
+
     std::vector<DevicePreset> presets;
 };
 
-// JSON serialization (ADL)
 void to_json(nlohmann::json& j, const AppSettings& s);
 void from_json(const nlohmann::json& j, AppSettings& s);
 

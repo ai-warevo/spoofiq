@@ -8,7 +8,6 @@ std::shared_ptr<aw::tobus::IEventBus> EventBusManager::instance_;
 void EventBusManager::init() {
     if (instance_) return;
     
-    // Use default in-process transport
     instance_ = aw::tobus::EventBusFactory::create();
 }
 

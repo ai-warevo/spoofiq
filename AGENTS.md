@@ -106,10 +106,15 @@ Tests cover:
 - **Resource loading** — Use relative paths from executable or packaged resources
 - **Font rendering** — Ensure fonts are available on target platforms
 
+## C++ Comments
+
+- **Explain why, not what:** Delete redundant comments that narrate code (e.g., `// increment i`, section markers). Assume reader knows C++.
+- **Keep valuable comments:** Explain intent, business logic, non-obvious edge cases, workarounds, or architectural constraints.
+- **Use block comments for multi-line:** Prefer `/* */` or `/** */` (Doxygen) over stacked `//` lines. Use `//` only for ultra-short inline notes and tool directives (`// NOLINT`).
+
 ## Documentation
 
 - Update README.md if behavior changes
 - Keep this file (AGENTS.md) up-to-date with new rules
 - Link to code examples when rules are complex
-- Comment why, not what (code shows what; comments explain intent)
 - Document platform-specific behavior in relevant modules

@@ -42,7 +42,6 @@ private:
     std::vector<LogEntry> log_buffer_;
     int unread_count_ = 0;
     
-    // Event subscriptions
     aw::tobus::Subscription progress_sub_;
     aw::tobus::Subscription file_finished_sub_;
     aw::tobus::Subscription batch_completed_sub_;
