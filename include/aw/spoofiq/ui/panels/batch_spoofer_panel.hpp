@@ -2,13 +2,15 @@
 
 #include <aw/spoofiq/core/types.hpp>
 #include <aw/spoofiq/core/metadata.hpp>
+#include <aw/spoofiq/core/events.hpp>
 #include <aw/spoofiq/config/config_manager.hpp>
-#include <aw/spoofiq/proc/image_processor.hpp>
+#include <aw/tpl/threading/tasks/task.hpp>
+#include <aw/tobus/tobus.hpp>
 #include <filesystem>
 #include <string>
 #include <vector>
 #include <atomic>
-#include <thread>
+#include <memory>
 
 namespace aw::spoofiq::ui {
 
@@ -34,13 +36,17 @@ private:
     std::atomic<int> processed_count_{0};
     std::atomic<float> progress_percent_{0.0f};
     
-    std::thread worker_thread_;
     std::atomic<bool> cancel_flag_{false};
     
-    void process_batch();
-    void process_batch_worker(std::vector<std::filesystem::path> input_files, std::filesystem::path output_dir);
+    // Event bus for receiving updates
+    std::shared_ptr<aw::tobus::IEventBus> event_bus_;
+    
     void refresh_preset_list();
-    int find_next_index(const std::filesystem::path& output_dir);
+    void start_batch_processing();
+    void handle_progress_event(const core::ProgressEvent& event);
+    void handle_file_finished_event(const core::FileFinishedEvent& event);
+    void handle_batch_completed_event(const core::BatchCompletedEvent& event);
 };
 
 } // namespace aw::spoofiq::ui
+

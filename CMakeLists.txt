@@ -239,6 +239,13 @@ aw_add_library(TARGET spoofiq_core_batch_orchestrator TYPE OBJECT
     PUBLIC_INCLUDE_DIRS include
     PUBLIC_LINKS spoofiq_core_types spoofiq_core_proc_image spoofiq_core_proc_video spoofiq_core_logging spoofiq_core_config)
 
+# ── Modular spoofiq_core: Async Batch Processor (aw::tpl + aw::tobus integration) ──
+aw_add_library(TARGET spoofiq_core_async_batch_processor TYPE OBJECT
+    SOURCES
+        src/proc/async_batch_processor.cpp
+    PUBLIC_INCLUDE_DIRS include
+    PUBLIC_LINKS spoofiq_core_types spoofiq_core_batch_orchestrator spoofiq_core_logging aw::tpl aw::tobus)
+
 # ── Modular spoofiq_core: Config Manager (Alpha 2) ───────────────────────────
 aw_add_library(TARGET spoofiq_core_config TYPE OBJECT
     SOURCES
@@ -278,6 +285,7 @@ aw_add_library(TARGET spoofiq_core TYPE STATIC ALIAS aw::spoofiq::core
         spoofiq_core_proc_video
         spoofiq_core_media_file
         spoofiq_core_batch_orchestrator
+        spoofiq_core_async_batch_processor
         spoofiq_core_config
         spoofiq_core_logging
         spoofiq_core_event_bus
