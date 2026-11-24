@@ -1,8 +1,30 @@
 # Spoofiq
 
-**Desktop batch metadata editor for media files**
+**Professional image batch processor for iOS metadata spoofing**
 
-Spoofiq is a C++23 native desktop application for batch-spoofing media metadata (EXIF, GPS, timestamps) to mimic authentic device outputs. Built with Dear ImGui for a responsive, fullscreen dockable interface.
+Spoofiq is a C++23 native desktop application for batch-processing images and embedding authentic Apple iPhone EXIF metadata. Built with Dear ImGui for a responsive, fullscreen dockable interface.
+
+**Current Release**: v0.5.0-Beta2 — Stable image batch processor with event-driven architecture
+
+---
+
+## Features
+
+✅ **Working:**
+- Batch image processing (PNG/JPG/BMP/TIF → JPEG with EXIF)
+- Device preset management (Add/Edit/Delete/Duplicate)
+- JSON persistence for settings and presets
+- Real-time logging with live console viewer
+- Cancel-able batch operations with atomic progress tracking
+- Event bus for loosely-coupled architecture
+- C++23 strict (std::expected, std::format, std::filesystem)
+- 46 passing tests (Catch2 v3)
+
+⏱️ **Planned (Future Releases):**
+- Video processing (MP4/MOV metadata injection)
+- File browser with native OS dialogs
+- GPS coordinate randomization
+- Timestamp randomization and shifting
 
 ---
 
@@ -19,14 +41,13 @@ Spoofiq is a C++23 native desktop application for batch-spoofing media metadata 
 
 ## UI Overview
 
-Four-tab fullscreen dockspace:
+**Three-tab fullscreen interface:**
 
-1. **Batch Spoofer**: Select folder, choose preset, process files
-2. **Presets & Devices**: Add/edit/delete/duplicate device profiles
-3. **Appearance**: Theme selector (Dark/Light/Midnight), accent color picker, UI scale slider
-4. **Console**: Real-time log output with auto-scroll
+1. **Batch Spoofer**: Select files, choose device preset, process with progress tracking
+2. **Presets & Devices**: Manage camera/phone metadata profiles
+3. **Console**: Real-time log viewer with filtering and search
 
-Press **ESC** to quit. Press **F12** (debug builds only) to toggle ImGui style editor.
+Press **ESC** to quit.
 
 ---
 
@@ -69,7 +90,7 @@ cmake --build build --config Release
   - **Logging**: spdlog (v1.14.1)
   - **ai-warevo libraries**: aw_tpl (task scheduling), aw_tobus (event bus)
 - **CMake modules**: aw_cmake_modules from local `../template_cpp/cmake`
-- **Image I/O**: stb_image + stb_image_write (vendored headers)
+- **Image I/O**: stb_image + stb_image_write (via FetchContent)
 - **EXIF**: Manual TIFF/EXIF structure building (no external library)
 
 See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for module DAG and design decisions.

@@ -36,60 +36,92 @@ spoofiq_app (executable)
 ```
 spoofiq_app
     ↓
-spoofiq_ui ← (imgui, glfw)
+spoofiq_ui ← (imgui, glfw, OpenGL)
     ↓
 spoofiq_core
     ├── spoofiq_core_types
-    ├── spoofiq_core_io_metadata ← (Exiv2, stb_image_write - Alpha 3)
-    ├── spoofiq_core_io_image ← (stb_image - Alpha 3)
-    ├── spoofiq_core_proc_image ← (spdlog - Beta 1)
-    ├── spoofiq_core_proc_video ← (TagLib - Alpha 3)
-    └── spoofiq_core_legacy ← (nlohmann/json - Alpha 2)
+    ├── spoofiq_core_io_metadata ← (manual EXIF building; TagLib deferred)
+    ├── spoofiq_core_io_image ← (stb_image via FetchContent)
+    ├── spoofiq_core_proc_image ← (spdlog)
+    ├── spoofiq_core_proc_video ← (stub; TagLib deferred)
+    ├── spoofiq_core_config ← (nlohmann/json)
+    ├── spoofiq_core_logging ← (spdlog, imgui)
+    ├── spoofiq_core_event_bus ← (aw::tobus)
+    └── spoofiq_core_state ← (core types)
 ```
 
 ## Module Responsibilities
 
 ### spoofiq_core_types
-- Pure C++23 types (ExifData, GpsCoords, DevicePreset, etc.)
-- No dependencies beyond STL
-- Header-only interface library
+- Pure C++23 types (DrawCommand, PanelId, PanelRegistry, OverlayCanvas)
+- No external dependencies
 
 ### spoofiq_core_io_metadata
-- EXIF writing via Exiv2 (images)
-- QuickTime atom writing via TagLib (videos)
-- Output naming strategy (IMG_XXXX with atomic index)
+- Manual EXIF structure building (TIFF/EXIF spec compliance)
+- Atomic IMG_XXXX sequence generation
+- **Stub**: QuickTime atoms (requires TagLib, deferred)
 
 ### spoofiq_core_io_image
-- Image loading via stb_image (PNG/JPG/BMP/TIF)
-- Image saving via stb_image_write (JPG only)
+- Image loading via stb_image (PNG/JPG/BMP/TIF) via FetchContent
+- Image saving via stb_image_write (JPG only) via FetchContent
 
 ### spoofiq_core_proc_image
-- ImageProcessor: single-image processing pipeline
-- Coordinates with metadata_writer and image I/O
+- ImageProcessor: batch image processing pipeline
+- EXIF injection for iPhone metadata
+- Thread-safe with progress tracking
 
 ### spoofiq_core_proc_video
-- VideoProcessor: single-video processing pipeline
-- Coordinates with TagLib for QuickTime atoms
+- **Stub**: VideoProcessor skeleton
+- Deferred implementation (requires TagLib for QuickTime)
 
-### spoofiq_core_legacy
-- Config: JSON persistence for app settings and device presets
-- PanelRegistry: UI panel management (will be refactored in Beta 3)
-- OverlayCanvas: Drawing commands (out of scope for spoofiq)
+### spoofiq_core_config
+- JSON persistence for app settings and device presets
+- ConfigManager with thread-safe caching
+
+### spoofiq_core_logging
+- spdlog logger wrapper with custom ImGuiConsoleSink
+- Thread-safe structured logging
+
+### spoofiq_core_event_bus
+- Event bus singleton using aw::tobus
+- Decouples batch processing from UI updates
+
+### spoofiq_core_state
+- AppState: window and UI configuration persistence
+- Config: app settings and device presets
+- OverlayCanvas: drawing command storage
 
 ### spoofiq_ui
-- UiRoot: ImGui window management and event loop
-- BatchSpooferPanel: main UI with device selection, file I/O, batch controls
+- UiRoot: ImGui window management
+- Three-tab interface (Batch Spoofer, Presets & Devices, Console)
+- Event-driven updates from background processing
 
 ### spoofiq_app
-- main.cpp: GLFW/OpenGL initialization and render loop
-- Wires spoofiq_ui and spoofiq_core together
+- main.cpp: GLFW/OpenGL initialization
+- Integrates UI and core layers
 
 ## Build System
 
-- **CMake FetchContent** for all dependencies (no manual installation)
-- **Incremental compilation**: changes to one module only rebuild dependent modules
-- **vendor/ directory**: CMake build cache (`.gitignore`d)
-- **Release builds**: -O3 optimization, no debug symbols
+- **CMake FetchContent** for all dependencies (stb, nlohmann/json, spdlog, imgui, glfw, Catch2, aw::tpl, aw::tobus)
+- **Incremental compilation**: modular OBJECT libraries for fast builds
+- **Platform support**: Linux (clang/gcc), Windows (MSVC), macOS (clang)
+
+## Current Version (v0.5.0 - Beta 2)
+
+**What works:**
+- ✅ Image batch processing (PNG/JPG/BMP/TIF → JPEG with EXIF)
+- ✅ Device preset management with JSON persistence
+- ✅ 3-tab professional UI
+- ✅ Real-time progress tracking with cancellation
+- ✅ Event bus integration for loosely-coupled architecture
+- ✅ spdlog-based console logging
+- ✅ 46 passing tests (Catch2 v3)
+
+**Known limitations:**
+- ❌ Video processing (stub; requires TagLib)
+- ❌ File browser (stub; requires nativefiledialog-extended)
+- ❌ GPS randomization (stub; planned for future)
+- ❌ Timestamp randomization (stub; planned for future)
 
 ## Threading Model (Beta 2+)
 

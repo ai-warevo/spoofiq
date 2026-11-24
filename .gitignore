@@ -54,5 +54,8 @@ version
 # pattern above would otherwise hide it, and FetchContent / git clone consumers would fail at configure time.
 !/VERSION
 
+# ImGui layout dumps
+imgui.ini
+
 # Developer-local presets (copy CMakeUserPresets.json.example)
 CMakeUserPresets.json
