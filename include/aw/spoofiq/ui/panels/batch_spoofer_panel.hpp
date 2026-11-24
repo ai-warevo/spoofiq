@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AW_SPOOFIQ_UI_PANELS_BATCH_SPOOFER_PANEL_HPP
+#define AW_SPOOFIQ_UI_PANELS_BATCH_SPOOFER_PANEL_HPP
 
 #include <aw/spoofiq/core/types.hpp>
 #include <aw/spoofiq/core/metadata.hpp>
@@ -49,4 +50,6 @@ private:
 };
 
 } // namespace aw::spoofiq::ui
+
+#endif // AW_SPOOFIQ_UI_PANELS_BATCH_SPOOFER_PANEL_HPP
 

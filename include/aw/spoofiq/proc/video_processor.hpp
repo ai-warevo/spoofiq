@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AW_SPOOFIQ_PROC_VIDEO_PROCESSOR_HPP
+#define AW_SPOOFIQ_PROC_VIDEO_PROCESSOR_HPP
 
 #include <aw/spoofiq/core/metadata.hpp>
 #include <filesystem>
@@ -26,3 +27,5 @@ public:
 };
 
 } // namespace aw::spoofiq::proc
+
+#endif // AW_SPOOFIQ_PROC_VIDEO_PROCESSOR_HPP

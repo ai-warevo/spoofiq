@@ -106,6 +106,9 @@ Tests cover:
 - **Resource loading** — Use relative paths from executable or packaged resources
 - **Font rendering** — Ensure fonts are available on target platforms
 
+## C++ Header Guards
+- Headers use standard C++ include guards (`#ifndef <GUARD>` / `#define <GUARD>` / `#endif // <GUARD>`) with unique `UPPER_SNAKE_CASE` macro names derived from the project and relative file path (e.g., `PROJECT_MODULE_FILE_HPP`).
+
 ## C++ Comments
 
 - **Explain why, not what:** Delete redundant comments that narrate code (e.g., `// increment i`, section markers). Assume reader knows C++.

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AW_SPOOFIQ_CONFIG_CONFIG_MANAGER_HPP
+#define AW_SPOOFIQ_CONFIG_CONFIG_MANAGER_HPP
 
 #include <string>
 #include <vector>
@@ -67,3 +68,5 @@ private:
 };
 
 } // namespace aw::spoofiq
+
+#endif // AW_SPOOFIQ_CONFIG_CONFIG_MANAGER_HPP

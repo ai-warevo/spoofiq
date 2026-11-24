@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AW_SPOOFIQ_UI_ERROR_DIALOG_HPP
+#define AW_SPOOFIQ_UI_ERROR_DIALOG_HPP
 
 #include <string>
 #include <functional>
@@ -18,3 +19,5 @@ private:
 };
 
 } // namespace aw::spoofiq::ui
+
+#endif // AW_SPOOFIQ_UI_ERROR_DIALOG_HPP

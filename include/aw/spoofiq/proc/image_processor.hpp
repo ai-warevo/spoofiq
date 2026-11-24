@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AW_SPOOFIQ_PROC_IMAGE_PROCESSOR_HPP
+#define AW_SPOOFIQ_PROC_IMAGE_PROCESSOR_HPP
 
 #include <filesystem>
 #include <expected>
@@ -22,3 +23,5 @@ private:
 };
 
 } // namespace aw::spoofiq::proc
+
+#endif // AW_SPOOFIQ_PROC_IMAGE_PROCESSOR_HPP

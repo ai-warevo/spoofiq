@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AW_SPOOFIQ_IO_IMAGE_IO_HPP
+#define AW_SPOOFIQ_IO_IMAGE_IO_HPP
 
 #include <vector>
 #include <cstdint>
@@ -48,3 +49,5 @@ private:
 };
 
 } // namespace aw::spoofiq::io
+
+#endif // AW_SPOOFIQ_IO_IMAGE_IO_HPP

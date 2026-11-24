@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AW_SPOOFIQ_UI_PANELS_APPEARANCE_PANEL_HPP
+#define AW_SPOOFIQ_UI_PANELS_APPEARANCE_PANEL_HPP
 
 #include <aw/spoofiq/core/types.hpp>
 #include <aw/spoofiq/config/config_manager.hpp>
@@ -22,3 +23,5 @@ private:
 };
 
 } // namespace aw::spoofiq::ui
+
+#endif // AW_SPOOFIQ_UI_PANELS_APPEARANCE_PANEL_HPP

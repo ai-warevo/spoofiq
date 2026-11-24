@@ -55,8 +55,9 @@ Checks:
   - '-altera-*'
   - '-fuchsia-*'
   - '-android-*'
-  # Header guard: standard include guards (AW_<PROJECT>_<PATH>_HPP)
-  - '-llvm-header-guard'
+  # Header guard: standard include guards (AW_SPOOFIQ_<PATH>_HPP and GL_LOADER_HPP)
+  # Note: llvm-header-guard is enabled; .clang-tidy HeaderFileExtensions defaults
+  # to h,hh,hpp,hxx — matches our convention (*.hpp)
   # Non-private member variables: detail structs have public fields by design
   - '-misc-non-private-member-variables-in-classes'
   # Const-correctness: false positives on lock_guard / scoped_lock (can't be const)

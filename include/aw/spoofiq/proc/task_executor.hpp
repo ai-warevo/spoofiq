@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AW_SPOOFIQ_PROC_TASK_EXECUTOR_HPP
+#define AW_SPOOFIQ_PROC_TASK_EXECUTOR_HPP
 
 #include <aw/tpl/threading/thread_pool.hpp>
 #include <aw/tpl/threading/tasks/task.hpp>
@@ -38,3 +39,5 @@ private:
 };
 
 } // namespace aw::spoofiq::proc
+
+#endif // AW_SPOOFIQ_PROC_TASK_EXECUTOR_HPP

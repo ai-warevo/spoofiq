@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AW_SPOOFIQ_CORE_METADATA_HPP
+#define AW_SPOOFIQ_CORE_METADATA_HPP
 
 #include <cstdint>
 #include <string>
@@ -43,3 +44,5 @@ struct VideoMetadata {
 };
 
 } // namespace aw::spoofiq::core
+
+#endif // AW_SPOOFIQ_CORE_METADATA_HPP

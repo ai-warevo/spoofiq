@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GL_LOADER_HPP
+#define GL_LOADER_HPP
 
 /*
  * @file gl_loader.hpp
@@ -33,3 +34,5 @@
     #include <OpenGL/gl.h>
     #include <OpenGL/glext.h>
 #endif
+
+#endif // GL_LOADER_HPP

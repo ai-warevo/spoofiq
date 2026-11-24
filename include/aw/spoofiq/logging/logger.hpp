@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AW_SPOOFIQ_LOGGING_LOGGER_HPP
+#define AW_SPOOFIQ_LOGGING_LOGGER_HPP
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/base_sink.h>
@@ -65,3 +66,5 @@ private:
 };
 
 } // namespace aw::spoofiq
+
+#endif // AW_SPOOFIQ_LOGGING_LOGGER_HPP

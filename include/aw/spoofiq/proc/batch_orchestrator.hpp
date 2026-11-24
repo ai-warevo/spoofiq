@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AW_SPOOFIQ_PROC_BATCH_ORCHESTRATOR_HPP
+#define AW_SPOOFIQ_PROC_BATCH_ORCHESTRATOR_HPP
 
 #include <aw/spoofiq/core/metadata.hpp>
 #include <aw/spoofiq/config/config_manager.hpp>
@@ -45,3 +46,5 @@ private:
 };
 
 } // namespace aw::spoofiq::proc
+
+#endif // AW_SPOOFIQ_PROC_BATCH_ORCHESTRATOR_HPP

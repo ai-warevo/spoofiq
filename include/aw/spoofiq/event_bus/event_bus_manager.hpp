@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AW_SPOOFIQ_EVENT_BUS_EVENT_BUS_MANAGER_HPP
+#define AW_SPOOFIQ_EVENT_BUS_EVENT_BUS_MANAGER_HPP
 
 #include <aw/tobus/event_bus.hpp>
 #include <memory>
@@ -19,3 +20,5 @@ private:
 };
 
 } // namespace aw::spoofiq
+
+#endif // AW_SPOOFIQ_EVENT_BUS_EVENT_BUS_MANAGER_HPP

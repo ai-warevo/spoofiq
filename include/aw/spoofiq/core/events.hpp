@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AW_SPOOFIQ_CORE_EVENTS_HPP
+#define AW_SPOOFIQ_CORE_EVENTS_HPP
 
 #include <string>
 #include <cstdint>
@@ -34,3 +35,5 @@ struct BatchCompletedEvent {
 struct BatchCancelledEvent {};
 
 } // namespace aw::spoofiq::core
+
+#endif // AW_SPOOFIQ_CORE_EVENTS_HPP

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AW_SPOOFIQ_PROC_ASYNC_BATCH_PROCESSOR_HPP
+#define AW_SPOOFIQ_PROC_ASYNC_BATCH_PROCESSOR_HPP
 
 #include <aw/spoofiq/proc/batch_orchestrator.hpp>
 #include <aw/spoofiq/core/events.hpp>
@@ -42,3 +43,5 @@ private:
 };
 
 } // namespace aw::spoofiq::proc
+
+#endif // AW_SPOOFIQ_PROC_ASYNC_BATCH_PROCESSOR_HPP

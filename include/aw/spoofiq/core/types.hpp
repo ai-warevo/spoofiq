@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AW_SPOOFIQ_CORE_TYPES_HPP
+#define AW_SPOOFIQ_CORE_TYPES_HPP
 
 #include <cstdint>
 #include <memory>
@@ -86,3 +87,5 @@ private:
 };
 
 } // namespace aw::spoofiq
+
+#endif // AW_SPOOFIQ_CORE_TYPES_HPP

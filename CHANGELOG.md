@@ -6,6 +6,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased]
+
+### Planned for v1.0
+- Final cross-platform testing (Windows MSVC, Linux Clang18/GCC)
+- Release binaries (signed artifacts for Windows + Linux)
+- Full QA validation on Windows 10+ and Ubuntu 22.04+
+
+---
+
 ## [0.5.0] - Beta 2
 
 ### Added - Beta 2 (v0.5.0)

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AW_SPOOFIQ_IO_METADATA_IO_HPP
+#define AW_SPOOFIQ_IO_METADATA_IO_HPP
 
 #include <aw/spoofiq/core/metadata.hpp>
 #include <vector>
@@ -35,3 +36,5 @@ private:
 };
 
 } // namespace aw::spoofiq::io
+
+#endif // AW_SPOOFIQ_IO_METADATA_IO_HPP

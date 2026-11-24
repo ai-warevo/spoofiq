@@ -1,4 +1,5 @@
-#pragma once
+#ifndef AW_SPOOFIQ_PROC_MEDIA_FILE_HPP
+#define AW_SPOOFIQ_PROC_MEDIA_FILE_HPP
 
 #include <filesystem>
 #include <string>
@@ -33,3 +34,5 @@ public:
 };
 
 } // namespace aw::spoofiq::proc
+
+#endif // AW_SPOOFIQ_PROC_MEDIA_FILE_HPP
