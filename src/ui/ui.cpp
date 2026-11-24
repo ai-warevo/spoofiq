@@ -1,5 +1,5 @@
-#include <aw/spoofiq/ui.hpp>
-#include <aw/spoofiq/config.hpp>
+#include <aw/spoofiq/ui/ui.hpp>
+#include <aw/spoofiq/core/config.hpp>
 #include <aw/spoofiq/core/types.hpp>
 #include <aw/spoofiq/ui/panels/console_panel.hpp>
 #include <aw/spoofiq/ui/error_dialog.hpp>

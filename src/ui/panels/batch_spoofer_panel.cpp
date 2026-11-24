@@ -2,7 +2,7 @@
 #include <aw/spoofiq/ui/error_dialog.hpp>
 #include <aw/spoofiq/io/image_io.hpp>
 #include <aw/spoofiq/io/metadata_io.hpp>
-#include <aw/spoofiq/logger.hpp>
+#include <aw/spoofiq/logging/logger.hpp>
 #include <aw/tobus/tobus.hpp>
 #include <imgui.h>
 #include <format>

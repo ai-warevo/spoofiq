@@ -242,14 +242,14 @@ aw_add_library(TARGET spoofiq_core_logging TYPE OBJECT
 # ── Modular spoofiq_core: Event Bus Manager (Beta 3) ──────────────────────────
 aw_add_library(TARGET spoofiq_core_event_bus TYPE OBJECT
     SOURCES
-        src/event_bus_manager.cpp
+        src/event_bus/event_bus_manager.cpp
     PUBLIC_INCLUDE_DIRS include
     PUBLIC_LINKS spoofiq_core_types aw::tobus)
 
 # ── Modular spoofiq_core: Config & Canvas (Core state) ────────────────────────
 aw_add_library(TARGET spoofiq_core_state TYPE OBJECT
     SOURCES
-        src/config.cpp
+        src/core/config.cpp
         src/core/overlay_canvas.cpp
     PUBLIC_INCLUDE_DIRS include
     PUBLIC_LINKS spoofiq_core_types)
@@ -276,14 +276,14 @@ endif()
 # ── Target 2: spoofiq_ui (static lib, ImGui + spoofiq_core) ──────────────────────
 aw_add_library(TARGET spoofiq_ui TYPE STATIC ALIAS aw::spoofiq::ui
     SOURCES
-        src/ui.cpp
+        src/ui/ui.cpp
         src/ui/error_dialog.cpp
         src/ui/panels/batch_spoofer_panel.cpp
         src/ui/panels/presets_panel.cpp
         src/ui/panels/console_panel.cpp
         src/ui/panels/appearance_panel.cpp
     HEADERS
-        include/aw/spoofiq/ui.hpp
+        include/aw/spoofiq/ui/ui.hpp
         include/aw/spoofiq/spoofiq.hpp
     PUBLIC_INCLUDE_DIRS include
     PUBLIC_LINKS aw::spoofiq::core imgui)
@@ -321,11 +321,11 @@ endif()
 
 # ── Target 4: spoofiq_overlay (shared lib, embeddable) ──────────────────────────
 if(SPOOFIQ_BUILD_OVERLAY)
-    set(_overlay_sources src/overlay_common.cpp)
+    set(_overlay_sources src/overlay/overlay_common.cpp)
     if(WIN32)
-        list(APPEND _overlay_sources src/overlay_win32.cpp)
+        list(APPEND _overlay_sources src/overlay/overlay_win32.cpp)
     else()
-        list(APPEND _overlay_sources src/overlay_posix.cpp)
+        list(APPEND _overlay_sources src/overlay/overlay_posix.cpp)
     endif()
 
     aw_add_library(TARGET spoofiq_overlay TYPE SHARED ALIAS aw::spoofiq::overlay

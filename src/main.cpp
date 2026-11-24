@@ -15,8 +15,8 @@
 #include <aw/spoofiq/ui/panels/presets_panel.hpp>
 #include <aw/spoofiq/ui/panels/console_panel.hpp>
 #include <aw/spoofiq/ui/panels/appearance_panel.hpp>
-#include <aw/spoofiq/logger.hpp>
-#include <aw/spoofiq/event_bus_manager.hpp>
+#include <aw/spoofiq/logging/logger.hpp>
+#include <aw/spoofiq/event_bus/event_bus_manager.hpp>
 
     namespace {
     void glfw_error_callback(int error, const char* description) {

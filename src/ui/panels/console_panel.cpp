@@ -1,6 +1,6 @@
 #include <aw/spoofiq/ui/panels/console_panel.hpp>
-#include <aw/spoofiq/logger.hpp>
-#include <aw/spoofiq/event_bus_manager.hpp>
+#include <aw/spoofiq/logging/logger.hpp>
+#include <aw/spoofiq/event_bus/event_bus_manager.hpp>
 #include <aw/spoofiq/core/events.hpp>
 #include <aw/tpl/threading/tasks/task.hpp>
 #include <imgui.h>

@@ -1,4 +1,4 @@
-#include <aw/spoofiq/config.hpp>
+#include <aw/spoofiq/core/config.hpp>
 
 #include <fstream>
 #include <sstream>

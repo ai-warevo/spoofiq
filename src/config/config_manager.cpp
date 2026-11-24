@@ -1,4 +1,4 @@
-#include <aw/spoofiq/config_manager.hpp>
+#include <aw/spoofiq/config/config_manager.hpp>
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <sstream>

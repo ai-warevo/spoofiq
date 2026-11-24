@@ -1,7 +1,7 @@
 #include <aw/spoofiq/proc/image_processor.hpp>
 #include <aw/spoofiq/io/image_io.hpp>
 #include <aw/spoofiq/io/metadata_io.hpp>
-#include <aw/spoofiq/logger.hpp>
+#include <aw/spoofiq/logging/logger.hpp>
 #include <fstream>
 
 namespace aw::spoofiq::proc {

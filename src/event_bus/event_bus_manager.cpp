@@ -1,4 +1,4 @@
-#include <aw/spoofiq/event_bus_manager.hpp>
+#include <aw/spoofiq/event_bus/event_bus_manager.hpp>
 #include <aw/tobus/event_bus_factory.hpp>
 
 namespace aw::spoofiq {

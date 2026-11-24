@@ -2,7 +2,7 @@
 
 #include <aw/spoofiq/core/types.hpp>
 #include <aw/spoofiq/core/metadata.hpp>
-#include <aw/spoofiq/config_manager.hpp>
+#include <aw/spoofiq/config/config_manager.hpp>
 #include <aw/spoofiq/proc/image_processor.hpp>
 #include <filesystem>
 #include <string>

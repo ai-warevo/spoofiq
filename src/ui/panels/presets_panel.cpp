@@ -1,5 +1,5 @@
 #include <aw/spoofiq/ui/panels/presets_panel.hpp>
-#include <aw/spoofiq/logger.hpp>
+#include <aw/spoofiq/logging/logger.hpp>
 #include <imgui.h>
 #include <format>
 #include <cstring>

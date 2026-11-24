@@ -1,4 +1,4 @@
-#include <aw/spoofiq/config.hpp>
+#include <aw/spoofiq/core/config.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <filesystem>
 #include <fstream>

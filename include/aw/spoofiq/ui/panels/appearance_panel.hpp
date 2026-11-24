@@ -1,7 +1,7 @@
 #pragma once
 
 #include <aw/spoofiq/core/types.hpp>
-#include <aw/spoofiq/config_manager.hpp>
+#include <aw/spoofiq/config/config_manager.hpp>
 
 namespace aw::spoofiq::ui {
 

@@ -1,6 +1,6 @@
 #include <aw/spoofiq/ui/panels/appearance_panel.hpp>
 #include <imgui.h>
-#include <aw/spoofiq/logger.hpp>
+#include <aw/spoofiq/logging/logger.hpp>
 
 namespace aw::spoofiq::ui {
 
