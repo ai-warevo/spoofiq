@@ -30,56 +30,53 @@ find_package(Threads REQUIRED)
 find_package(OpenGL REQUIRED)
 aw_check_cxx23_runtime()
 
+include(DependencyCache)
+
 # ── Core Dependencies ──────────────────────────────────────────────────────────
 # aw::tpl (TPL: Task Parallel Library)
 if(NOT TARGET aw::tpl)
-    FetchContent_Declare(
-        aw_tpl
+    aw_fetch_dependency(
+        NAME aw_tpl
         GIT_REPOSITORY https://github.com/ai-warevo/tpl.git
         GIT_TAG main
-        GIT_SHALLOW ON)
-    set(AW_TPL_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-    set(AW_TPL_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    set(AW_TPL_INSTALL OFF CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(aw_tpl)
+        OPTIONS
+            AW_TPL_BUILD_TESTS OFF
+            AW_TPL_BUILD_EXAMPLES OFF
+            AW_TPL_INSTALL OFF)
 endif()
 
 # aw::tobus (Event Bus)
 if(NOT TARGET aw::tobus)
-    FetchContent_Declare(
-        aw_tobus
+    aw_fetch_dependency(
+        NAME aw_tobus
         GIT_REPOSITORY https://github.com/ai-warevo/tobus.git
         GIT_TAG main
-        GIT_SHALLOW ON)
-    set(TOBUS_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-    set(TOBUS_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    set(TOBUS_INSTALL OFF CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(aw_tobus)
+        OPTIONS
+            TOBUS_BUILD_TESTS OFF
+            TOBUS_BUILD_EXAMPLES OFF
+            TOBUS_INSTALL OFF)
 endif()
 
 # GLFW (windowing + input)
 if(NOT TARGET glfw)
-    FetchContent_Declare(
-        glfw
+    aw_fetch_dependency(
+        NAME glfw
         GIT_REPOSITORY https://github.com/glfw/glfw.git
         GIT_TAG 3.4
-        GIT_SHALLOW ON)
-    set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-    set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
-    set(GLFW_BUILD_WAYLAND OFF CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(glfw)
+        OPTIONS
+            GLFW_BUILD_DOCS OFF
+            GLFW_BUILD_TESTS OFF
+            GLFW_BUILD_EXAMPLES OFF
+            GLFW_INSTALL OFF
+            GLFW_BUILD_WAYLAND OFF)
 endif()
 
 # Dear ImGui (docking branch)
 if(NOT TARGET imgui)
-    FetchContent_Declare(
-        imgui
+    aw_fetch_dependency(
+        NAME imgui
         GIT_REPOSITORY https://github.com/ocornut/imgui.git
-        GIT_TAG v1.91.8-docking
-        GIT_SHALLOW ON)
-    FetchContent_MakeAvailable(imgui)
+        GIT_TAG v1.91.8-docking)
 
     add_library(imgui STATIC
         ${imgui_SOURCE_DIR}/imgui.cpp
@@ -101,96 +98,49 @@ endif()
 # ── Future Dependencies (Alpha 2+) ─────────────────────────────────────────────
 # nlohmann/json (v3.11.3) - Used in Alpha 2
 if(NOT TARGET nlohmann_json)
-    FetchContent_Declare(
-        nlohmann_json
+    aw_fetch_dependency(
+        NAME nlohmann_json
         GIT_REPOSITORY https://github.com/nlohmann/json.git
         GIT_TAG v3.11.3
-        GIT_SHALLOW ON)
-    set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
-    set(JSON_Install OFF CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(nlohmann_json)
+        OPTIONS
+            JSON_BuildTests OFF
+            JSON_Install OFF)
 endif()
 
 # spdlog (v1.14.1) - Used in Beta 1
 if(NOT TARGET spdlog)
-    FetchContent_Declare(
-        spdlog
+    aw_fetch_dependency(
+        NAME spdlog
         GIT_REPOSITORY https://github.com/gabime/spdlog.git
         GIT_TAG v1.14.1
-        GIT_SHALLOW ON)
-    set(SPDLOG_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-    set(SPDLOG_BUILD_EXAMPLE OFF CACHE BOOL "" FORCE)
-    set(SPDLOG_BUILD_SHARED OFF CACHE BOOL "" FORCE)
-    set(SPDLOG_INSTALL OFF CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(spdlog)
+        OPTIONS
+            SPDLOG_BUILD_TESTS OFF
+            SPDLOG_BUILD_EXAMPLE OFF
+            SPDLOG_BUILD_SHARED OFF
+            SPDLOG_INSTALL OFF)
 endif()
 
 # STB (single-header image library)
 if(NOT TARGET stb)
-    FetchContent_Declare(
-        stb
+    aw_fetch_dependency(
+        NAME stb
         GIT_REPOSITORY https://github.com/nothings/stb.git
-        GIT_TAG master
-        GIT_SHALLOW ON)
-    FetchContent_MakeAvailable(stb)
+        GIT_TAG master)
     
     # Create interface library for STB (header-only)
     add_library(stb INTERFACE)
     target_include_directories(stb SYSTEM INTERFACE ${stb_SOURCE_DIR})
 endif()
 
-# Exiv2 (v0.28.3) - Used in Alpha 3
-# DISABLED FOR NOW - has many dependencies (inih, brotli, etc.)
-# Will be properly integrated in Alpha 3
-#if(NOT TARGET exiv2lib)
-#    FetchContent_Declare(
-#        exiv2
-#        GIT_REPOSITORY https://github.com/Exiv2/exiv2.git
-#        GIT_TAG v0.28.3
-#        GIT_SHALLOW ON)
-#    set(EXIV2_BUILD_EXIV2_COMMAND OFF CACHE BOOL "" FORCE)
-#    set(EXIV2_BUILD_UNIT_TESTS OFF CACHE BOOL "" FORCE)
-#    set(EXIV2_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
-#    set(EXIV2_ENABLE_NLS OFF CACHE BOOL "" FORCE)
-#    FetchContent_MakeAvailable(exiv2)
-#endif()
-
-# TagLib (v2.0.2) - Used in Alpha 3
-# DISABLED FOR NOW - has linking issues in this environment
-# Will be properly integrated in Alpha 3
-#if(NOT TARGET tag)
-#    FetchContent_Declare(
-#        taglib
-#        GIT_REPOSITORY https://github.com/taglib/taglib.git
-#        GIT_TAG v2.0.2
-#        GIT_SHALLOW ON)
-#    set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
-#    set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-#    set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-#    FetchContent_MakeAvailable(taglib)
-#endif()
-
-# nativefiledialog-extended (v1.2.1) - Beta 3 (requires GTK3)
-# DISABLED - GTK3 not available in environment
-#if(NOT TARGET nfd)
-#    FetchContent_Declare(
-#        nativefiledialog
-#        GIT_REPOSITORY https://github.com/btzy/nativefiledialog-extended.git
-#        GIT_TAG v1.2.1
-#        GIT_SHALLOW ON)
-#    FetchContent_MakeAvailable(nativefiledialog)
-#endif()
-
 # ── Catch2 (v3) - Testing framework ────────────────────────────────────────────
 if(SPOOFIQ_BUILD_TESTS AND NOT TARGET Catch2::Catch2WithMain)
-    FetchContent_Declare(
-        Catch2
+    aw_fetch_dependency(
+        NAME Catch2
         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
         GIT_TAG v3.6.0
-        GIT_SHALLOW ON)
-    set(CATCH_INSTALL_DOCS OFF CACHE BOOL "" FORCE)
-    set(CATCH_INSTALL_EXTRAS OFF CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(Catch2)
+        OPTIONS
+            CATCH_INSTALL_DOCS OFF
+            CATCH_INSTALL_EXTRAS OFF)
 endif()
 
 # ── Modular spoofiq_core: Core Types (zero external deps) ───────────────────────
