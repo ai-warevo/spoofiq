@@ -1,8 +1,23 @@
 cmake_minimum_required(VERSION 3.23)
 
 include(FetchContent)
-# aw_cmake_modules from local template_cpp checkout
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../template_cpp/cmake")
+
+# aw_cmake_modules: prefer local checkout, fallback to GitHub
+set(AW_CMAKE_MODULES_LOCAL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../template_cpp/cmake")
+if(EXISTS "${AW_CMAKE_MODULES_LOCAL_PATH}/AWProject.cmake")
+    message(STATUS "Using local aw_cmake_modules from ../template_cpp")
+    list(APPEND CMAKE_MODULE_PATH "${AW_CMAKE_MODULES_LOCAL_PATH}")
+else()
+    message(STATUS "Local aw_cmake_modules not found, fetching from GitHub")
+    FetchContent_Declare(
+        aw_cmake_modules
+        GIT_REPOSITORY https://github.com/adembudak/template_cpp.git
+        GIT_TAG main
+        GIT_SHALLOW ON
+        SOURCE_SUBDIR cmake)
+    FetchContent_MakeAvailable(aw_cmake_modules)
+    list(APPEND CMAKE_MODULE_PATH "${aw_cmake_modules_SOURCE_DIR}/cmake")
+endif()
 
 include(AWProject)
 aw_project_prepare(NAME spoofiq NAMESPACE aw::spoofiq)

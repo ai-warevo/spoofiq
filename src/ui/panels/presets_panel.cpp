@@ -6,6 +6,16 @@
 
 namespace aw::spoofiq::ui {
 
+// Cross-platform safe string copy
+static inline void safe_strncpy(char* dest, size_t dest_size, const char* src) {
+#ifdef _WIN32
+    strncpy_s(dest, dest_size, src, _TRUNCATE);
+#else
+    std::strncpy(dest, src, dest_size - 1);
+    dest[dest_size - 1] = '\0';
+#endif
+}
+
 PresetsPanel::PresetsPanel() {
     // Load settings from config
     if (auto result = ConfigManager::load()) {
@@ -97,8 +107,7 @@ void PresetsPanel::render_preset_editor() {
     
     // Preset Name
     char name_buf[256];
-    std::strncpy(name_buf, edited_preset_.name.c_str(), sizeof(name_buf) - 1);
-    name_buf[sizeof(name_buf) - 1] = '\0';
+    safe_strncpy(name_buf, sizeof(name_buf), edited_preset_.name.c_str());
     if (ImGui::InputText("Preset Name:", name_buf, sizeof(name_buf))) {
         edited_preset_.name = name_buf;
         unsaved_changes_ = true;
@@ -109,8 +118,7 @@ void PresetsPanel::render_preset_editor() {
     
     // Make
     char make_buf[256];
-    std::strncpy(make_buf, edited_preset_.make.c_str(), sizeof(make_buf) - 1);
-    make_buf[sizeof(make_buf) - 1] = '\0';
+    safe_strncpy(make_buf, sizeof(make_buf), edited_preset_.make.c_str());
     if (ImGui::InputText("Make:", make_buf, sizeof(make_buf))) {
         edited_preset_.make = make_buf;
         unsaved_changes_ = true;
@@ -118,8 +126,7 @@ void PresetsPanel::render_preset_editor() {
     
     // Model
     char model_buf[256];
-    std::strncpy(model_buf, edited_preset_.model.c_str(), sizeof(model_buf) - 1);
-    model_buf[sizeof(model_buf) - 1] = '\0';
+    safe_strncpy(model_buf, sizeof(model_buf), edited_preset_.model.c_str());
     if (ImGui::InputText("Model:", model_buf, sizeof(model_buf))) {
         edited_preset_.model = model_buf;
         unsaved_changes_ = true;
@@ -127,8 +134,7 @@ void PresetsPanel::render_preset_editor() {
     
     // Software
     char software_buf[256];
-    std::strncpy(software_buf, edited_preset_.software.c_str(), sizeof(software_buf) - 1);
-    software_buf[sizeof(software_buf) - 1] = '\0';
+    safe_strncpy(software_buf, sizeof(software_buf), edited_preset_.software.c_str());
     if (ImGui::InputText("Software:", software_buf, sizeof(software_buf))) {
         edited_preset_.software = software_buf;
         unsaved_changes_ = true;
@@ -139,8 +145,7 @@ void PresetsPanel::render_preset_editor() {
     
     // Lens Model
     char lens_buf[512];
-    std::strncpy(lens_buf, edited_preset_.lens_model.c_str(), sizeof(lens_buf) - 1);
-    lens_buf[sizeof(lens_buf) - 1] = '\0';
+    safe_strncpy(lens_buf, sizeof(lens_buf), edited_preset_.lens_model.c_str());
     if (ImGui::InputTextMultiline("Lens Model:", lens_buf, sizeof(lens_buf), ImVec2(0, 60))) {
         edited_preset_.lens_model = lens_buf;
         unsaved_changes_ = true;

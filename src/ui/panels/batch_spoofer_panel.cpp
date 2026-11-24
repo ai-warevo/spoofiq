@@ -9,8 +9,19 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <cstring>
 
 namespace aw::spoofiq::ui {
+
+// Cross-platform safe string copy
+static inline void safe_strncpy(char* dest, size_t dest_size, const char* src) {
+#ifdef _WIN32
+    strncpy_s(dest, dest_size, src, _TRUNCATE);
+#else
+    std::strncpy(dest, src, dest_size - 1);
+    dest[dest_size - 1] = '\0';
+#endif
+}
 
 BatchSpooferPanel::BatchSpooferPanel() {
     // Load settings from config
@@ -76,8 +87,7 @@ void BatchSpooferPanel::render() {
     ImGui::Text("Folder:");
     ImGui::SameLine();
     char folder_buf[512];
-    std::strncpy(folder_buf, input_folder_.c_str(), sizeof(folder_buf) - 1);
-    folder_buf[sizeof(folder_buf) - 1] = '\0';
+    safe_strncpy(folder_buf, sizeof(folder_buf), input_folder_.c_str());
     if (ImGui::InputText("##input_folder", folder_buf, sizeof(folder_buf))) {
         input_folder_ = folder_buf;
         settings_.last_input_directory = input_folder_;
@@ -92,8 +102,7 @@ void BatchSpooferPanel::render() {
     if (settings_.export_to_subfolder) {
         ImGui::SameLine();
         char subfolder_buf[256];
-        std::strncpy(subfolder_buf, settings_.subfolder_name.c_str(), sizeof(subfolder_buf) - 1);
-        subfolder_buf[sizeof(subfolder_buf) - 1] = '\0';
+        safe_strncpy(subfolder_buf, sizeof(subfolder_buf), settings_.subfolder_name.c_str());
         if (ImGui::InputText("##subfolder", subfolder_buf, sizeof(subfolder_buf))) {
             settings_.subfolder_name = subfolder_buf;
         }
@@ -150,8 +159,7 @@ void BatchSpooferPanel::render() {
     if (!settings_.use_current_time) {
         ImGui::SameLine();
         char datetime_buf[128];
-        std::strncpy(datetime_buf, settings_.custom_datetime.c_str(), sizeof(datetime_buf) - 1);
-        datetime_buf[sizeof(datetime_buf) - 1] = '\0';
+        safe_strncpy(datetime_buf, sizeof(datetime_buf), settings_.custom_datetime.c_str());
         if (ImGui::InputText("##custom_datetime", datetime_buf, sizeof(datetime_buf))) {
             settings_.custom_datetime = datetime_buf;
         }
