@@ -123,6 +123,20 @@ if(NOT TARGET spdlog)
     FetchContent_MakeAvailable(spdlog)
 endif()
 
+# STB (single-header image library)
+if(NOT TARGET stb)
+    FetchContent_Declare(
+        stb
+        GIT_REPOSITORY https://github.com/nothings/stb.git
+        GIT_TAG master
+        GIT_SHALLOW ON)
+    FetchContent_MakeAvailable(stb)
+    
+    # Create interface library for STB (header-only)
+    add_library(stb INTERFACE)
+    target_include_directories(stb SYSTEM INTERFACE ${stb_SOURCE_DIR})
+endif()
+
 # Exiv2 (v0.28.3) - Used in Alpha 3
 # DISABLED FOR NOW - has many dependencies (inih, brotli, etc.)
 # Will be properly integrated in Alpha 3
@@ -187,15 +201,15 @@ aw_add_library(TARGET spoofiq_core_types TYPE OBJECT
 aw_add_library(TARGET spoofiq_core_io_metadata TYPE OBJECT
     SOURCES
         src/io/metadata_io.cpp
-    PUBLIC_INCLUDE_DIRS include ${CMAKE_CURRENT_SOURCE_DIR}/vendor
+    PUBLIC_INCLUDE_DIRS include
     PUBLIC_LINKS spoofiq_core_types)
 
 # ── Modular spoofiq_core: I/O Image Layer ───────────────────────────────────────
 aw_add_library(TARGET spoofiq_core_io_image TYPE OBJECT
     SOURCES
         src/io/image_io.cpp
-    PUBLIC_INCLUDE_DIRS include ${CMAKE_CURRENT_SOURCE_DIR}/vendor
-    PUBLIC_LINKS spoofiq_core_types spoofiq_core_io_metadata)
+    PUBLIC_INCLUDE_DIRS include
+    PUBLIC_LINKS spoofiq_core_types spoofiq_core_io_metadata stb)
 
 # ── Modular spoofiq_core: Processing - Image ──────────────────────────────────
 aw_add_library(TARGET spoofiq_core_proc_image TYPE OBJECT
@@ -242,7 +256,7 @@ aw_add_library(TARGET spoofiq_core_legacy TYPE OBJECT
 
 # ── Aggregate: spoofiq_core (static lib) ───────────────────────────────────────
 aw_add_library(TARGET spoofiq_core TYPE STATIC ALIAS aw::spoofiq::core
-    PUBLIC_INCLUDE_DIRS include ${CMAKE_CURRENT_SOURCE_DIR}/vendor
+    PUBLIC_INCLUDE_DIRS include
     PUBLIC_LINKS
         spoofiq_core_types
         spoofiq_core_io_metadata
@@ -253,7 +267,7 @@ aw_add_library(TARGET spoofiq_core TYPE STATIC ALIAS aw::spoofiq::core
         spoofiq_core_logging
         spoofiq_core_event_bus
         spoofiq_core_legacy
-        aw::tpl aw::tobus Threads::Threads)
+        aw::tpl aw::tobus Threads::Threads stb)
 
 if(SPOOFIQ_WARNINGS_AS_ERRORS)
     aw_configure_compiler(TARGET spoofiq_core STRICT_WARNINGS)
