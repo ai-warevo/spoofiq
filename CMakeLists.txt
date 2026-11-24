@@ -246,8 +246,8 @@ aw_add_library(TARGET spoofiq_core_event_bus TYPE OBJECT
     PUBLIC_INCLUDE_DIRS include
     PUBLIC_LINKS spoofiq_core_types aw::tobus)
 
-# ── Legacy spoofiq_core modules (to migrate) ──────────────────────────────────
-aw_add_library(TARGET spoofiq_core_legacy TYPE OBJECT
+# ── Modular spoofiq_core: Config & Canvas (Core state) ────────────────────────
+aw_add_library(TARGET spoofiq_core_state TYPE OBJECT
     SOURCES
         src/config.cpp
         src/core/overlay_canvas.cpp
@@ -266,7 +266,7 @@ aw_add_library(TARGET spoofiq_core TYPE STATIC ALIAS aw::spoofiq::core
         spoofiq_core_config
         spoofiq_core_logging
         spoofiq_core_event_bus
-        spoofiq_core_legacy
+        spoofiq_core_state
         aw::tpl aw::tobus Threads::Threads stb)
 
 if(SPOOFIQ_WARNINGS_AS_ERRORS)
