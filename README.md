@@ -6,6 +6,12 @@ Spoofiq is a C++23 native desktop application for batch-processing images and em
 
 **Current Release**: v0.5.0-Beta2 — Stable image batch processor with event-driven architecture
 
+**Build Status** (Phase 1 — Stability & Polish):
+- ✅ Linux GCC (Debug/Release): 0 warnings, all tests pass
+- ✅ Linux Clang (Debug): 0 warnings, all tests pass
+- ✅ Smoke test: 5/5 images processed, EXIF injected correctly
+- 🚧 Windows MSVC: Presets configured, awaiting CI validation
+
 ---
 
 ## Features
@@ -58,24 +64,40 @@ Press **ESC** to quit.
 - CMake 3.28+
 - OpenGL + GLFW dependencies
 
-**Linux:**
+**Linux (GCC or Clang):**
 ```bash
+# Install dependencies
 sudo apt install libgl1-mesa-dev libglu1-mesa-dev libglfw3-dev
-cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j$(nproc)
-./build/spoofiq_app
+
+# Configure (choose one preset)
+cmake --preset debug-gcc                    # GCC Debug (with tests)
+# or
+cmake --preset debug-clang                  # Clang Debug (with tests)
+# or
+cmake --preset release-gcc                  # GCC Release (optimized, no tests)
+
+# Build
+cmake --build build/Debug-gcc -j$(nproc)    # or build/Debug-clang or build/Release-gcc
+./build/Debug-gcc/spoofiq_app               # Run the app
 ```
 
-**Windows:**
+**Windows (MSVC 2026+):**
 ```cmd
-cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release
-.\build\Release\spoofiq_app.exe
+# Configure
+cmake --preset debug-msvc                   # Requires Visual Studio 18 2026
+# or
+cmake --preset release-msvc
+
+# Build
+cmake --build build/Debug-msvc --config Debug
+.\build\Debug-msvc\Debug\spoofiq_app.exe
 ```
 
-**Tests:**
+**Tests (Linux):**
 ```bash
-./build/tests/spoofiq_tests
+cmake --preset debug-gcc
+cmake --build build/Debug-gcc
+ctest --preset debug-gcc --output-on-failure
 ```
 
 ---
@@ -169,7 +191,38 @@ spoofiq_app --cli \
 
 ---
 
-## Configuration
+## Troubleshooting
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| `cmake: command not found` | CMake not installed | `sudo apt install cmake` (Linux) or download from cmake.org (Windows) |
+| `Could NOT find OpenGL` | GL headers missing | `sudo apt install libgl1-mesa-dev libglu1-mesa-dev` |
+| `Failed to find wayland-scanner` | Wayland build attempted on fresh Linux | Preset already passes `-DGLFW_BUILD_WAYLAND=OFF`; just reconfigure |
+| `The C compiler is not able to compile a simple test program` | C compiler flags conflict (clang-libcxx presets) | Use standard `debug-clang` preset instead; clang-libcxx requires `-stdlib=libc++` on C compiler too |
+| Config directory read-only | Sandbox or permission issue | Set `HOME=/tmp` env var before running, e.g., `HOME=/tmp ./spoofiq_app` |
+| Images fail to process ("Invalid image data") | stbi_load succeeded but data not copied to vector | Fixed in Phase 1; rebuild with latest code |
+| Tests don't run on Windows | Catch2 integration incomplete | Windows CI will run tests; manual testing uses GUI or CLI modes |
+| EXIF metadata not visible | exiftool not installed | Install `exiftool` package; metadata is correctly embedded (file info confirms iPhone model) |
+
+---
+
+## Development
+
+**Compiler warnings:**
+- Global flag: `-DSPOOFIQ_WARNINGS_AS_ERRORS=ON` (enabled in CMakeLists.txt)
+- All presets build with 0 warnings on Linux (GCC/Clang)
+- Windows MSVC validation pending
+
+**Code style:**
+- C++23 strict (std::expected, std::format, std::filesystem — no exceptions)
+- Modular OBJECT libraries for incremental builds
+- Event-driven via aw::tobus; async tasks via aw::tpl
+
+**Testing:**
+- Catch2 v3.4.0 with 46 test assertions
+- Run via `ctest --preset debug-gcc` or `./build/Debug-gcc/spoofiq_tests`
+
+---
 
 Settings stored in:
 - **Linux/macOS**: `~/.config/spoofiq/config.json`
