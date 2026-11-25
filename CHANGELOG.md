@@ -8,7 +8,32 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-### Planned for v1.0
+### Planned for v1.0: Phase 1 (Stability & Polish)
+
+#### Fixed
+- C4267: size_t → int conversion in batch_orchestrator.cpp (explicit cast)
+- C4100: Unused parameter `total_files` removed from BatchOrchestrator::process_batch
+- C4244: unsigned char → char in media_file.cpp lambda (explicit cast)
+- GCC -Wsign-compare in image_processor.cpp (cast multiplication to size_t)
+- **Critical:** ImageIO::load() was not populating image.data; stbi_load data is now copied to vector
+
+#### Changed
+- Global warnings-as-errors: `-DSPOOFIQ_WARNINGS_AS_ERRORS=ON` in CMakeLists.txt
+- Catch2 integration: Manual `add_test()` registration (v3 does not auto-export catch_discover_tests)
+- CMakePresets now pass `-DGLFW_BUILD_WAYLAND=OFF` to avoid wayland-scanner dependency on fresh Linux
+
+#### Added
+- Catch2 v3.4.0 test framework with 46 assertions (now builds on debug-gcc, debug-clang)
+
+#### Status
+- ✅ Linux GCC build: 0 warnings, all tests pass
+- ✅ Linux Clang build: 0 warnings, all tests pass
+- ✅ Smoke test: 5/5 images processed, IMG_XXXX sequence generated, EXIF injected
+- 🚧 Windows MSVC: Presets configured; awaiting CI validation
+- 🚧 Documentation: README and troubleshooting pending
+- 🚧 Release artifacts: CI pipeline needed for signed binaries
+
+### Planned for v1.0: Phase 2 & 3
 - Final cross-platform testing (Windows MSVC, Linux Clang18/GCC)
 - Release binaries (signed artifacts for Windows + Linux)
 - Full QA validation on Windows 10+ and Ubuntu 22.04+
