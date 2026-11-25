@@ -184,12 +184,6 @@ aw_add_library(TARGET spoofiq_core_proc_video TYPE OBJECT
     PUBLIC_INCLUDE_DIRS include
     PUBLIC_LINKS spoofiq_core_types)
 
-# ── Modular spoofiq_core: Media File Abstraction ────────────────────────────────
-aw_add_library(TARGET spoofiq_core_media_file TYPE OBJECT
-    SOURCES
-        src/proc/media_file.cpp
-    PUBLIC_INCLUDE_DIRS include
-    PUBLIC_LINKS spoofiq_core_types)
 
 # ── Modular spoofiq_core: Batch Orchestrator ──────────────────────────────────────
 aw_add_library(TARGET spoofiq_core_batch_orchestrator TYPE OBJECT
@@ -261,7 +255,6 @@ aw_add_library(TARGET spoofiq_core TYPE STATIC ALIAS aw::spoofiq::core
         spoofiq_core_io_image
         spoofiq_core_proc_image
         spoofiq_core_proc_video
-        spoofiq_core_media_file
         spoofiq_core_batch_orchestrator
         spoofiq_core_async_batch_processor
         spoofiq_core_task_executor
