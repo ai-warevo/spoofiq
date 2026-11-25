@@ -25,7 +25,7 @@ std::expected<void, std::string> ImageProcessor::process(
     if (img.channels == 4) {
         Logger::get()->info("Converting RGBA to RGB");
         std::vector<uint8_t> rgb_data(img.width * img.height * 3);
-        for (size_t i = 0; i < img.width * img.height; ++i) {
+        for (size_t i = 0; i < static_cast<size_t>(img.width * img.height); ++i) {
             rgb_data[i * 3 + 0] = img.data[i * 4 + 0];
             rgb_data[i * 3 + 1] = img.data[i * 4 + 1];
             rgb_data[i * 3 + 2] = img.data[i * 4 + 2];
