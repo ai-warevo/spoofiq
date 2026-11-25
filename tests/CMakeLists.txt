@@ -26,6 +26,5 @@ target_link_libraries(spoofiq_tests PRIVATE
 
 set_target_properties(spoofiq_tests PROPERTIES CXX_STANDARD 23)
 
-# Register tests with CMake
-include(Catch)
-catch_discover_tests(spoofiq_tests)
+# Register tests with CMake (manual registration)
+add_test(NAME spoofiq_tests COMMAND spoofiq_tests)
