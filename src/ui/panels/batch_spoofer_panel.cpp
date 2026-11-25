@@ -127,9 +127,7 @@ void BatchSpooferPanel::render() {
         settings_.last_input_directory = input_folder_;
     }
     ImGui::SameLine();
-    if (ImGui::Button("Browse...")) {
-        status_message_ = "File browser not yet implemented (nfd stub)";
-    }
+    ImGui::TextDisabled("(v1.1: file browser)");
 
     ImGui::Checkbox("Export to subfolder:", &settings_.export_to_subfolder);
     if (settings_.export_to_subfolder) {

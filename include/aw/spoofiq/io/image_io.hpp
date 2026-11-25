@@ -40,9 +40,6 @@ public:
         const Image& image,
         const std::filesystem::path& output_path);
 
-    /// Convert image to RGB (3 channels) if needed.
-    static std::expected<Image, std::string> convert_to_rgb(const Image& input);
-
 private:
     // stb_image callback for JPEG writing
     static void write_callback(void* context, void* data, int size);

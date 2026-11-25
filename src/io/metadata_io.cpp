@@ -126,14 +126,4 @@ std::vector<uint8_t> MetadataIO::inject_exif_into_jpeg(
     return result;
 }
 
-std::expected<void, std::string> MetadataIO::inject_quicktime_atoms(
-    const std::string& mp4_path,
-    const core::VideoMetadata& metadata) {
-    
-    // Stub for Alpha 3 when TagLib is integrated
-    (void)mp4_path;
-    (void)metadata;
-    return std::unexpected("QuickTime atom injection not yet implemented (Alpha 3)");
-}
-
 } // namespace aw::spoofiq::io

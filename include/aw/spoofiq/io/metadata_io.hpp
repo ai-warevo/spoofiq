@@ -22,13 +22,6 @@ public:
         const std::vector<uint8_t>& jpeg_data,
         const std::vector<uint8_t>& exif_blob);
 
-    /// Inject QuickTime atoms into MP4/MOV file.
-    /// Modifies file in-place, returns error if operation fails.
-    /// (Stub for Alpha 3 when TagLib is integrated)
-    static std::expected<void, std::string> inject_quicktime_atoms(
-        const std::string& mp4_path,
-        const core::VideoMetadata& metadata);
-
 private:
     // Helper methods for TIFF/EXIF encoding
     static void write_u16_le(std::vector<uint8_t>& buf, uint16_t val);

@@ -1,6 +1,5 @@
 #include <aw/spoofiq/proc/batch_orchestrator.hpp>
 #include <aw/spoofiq/proc/image_processor.hpp>
-#include <aw/spoofiq/proc/video_processor.hpp>
 #include <aw/spoofiq/logging/logger.hpp>
 #include <format>
 

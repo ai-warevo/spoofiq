@@ -86,17 +86,4 @@ std::expected<void, std::string> ImageIO::save_png(
     return {};
 }
 
-std::expected<Image, std::string> ImageIO::convert_to_rgb(const Image& input) {
-    if (input.channels == 3) {
-        return input;  // Already RGB
-    }
-
-    if (!input.is_valid()) {
-        return std::unexpected("Invalid input image");
-    }
-
-    // For now, just return as-is if not RGB (proper conversion in Alpha 3)
-    return input;
-}
-
 } // namespace aw::spoofiq::io
