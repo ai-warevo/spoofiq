@@ -65,12 +65,12 @@ if(NOT TARGET glfw)
         GLFW_BUILD_TESTS OFF
         GLFW_BUILD_EXAMPLES OFF
         GLFW_INSTALL OFF)
-    
+
     if(UNIX AND NOT APPLE)
         # Linux: use X11 only (disable Wayland to avoid wayland-scanner requirement)
         list(APPEND _glfw_options GLFW_BUILD_X11 ON GLFW_BUILD_WAYLAND OFF)
     endif()
-    
+
     aw_fetch_dependency(
         NAME glfw
         GIT_REPOSITORY https://github.com/glfw/glfw.git
@@ -133,7 +133,7 @@ if(NOT TARGET stb)
         NAME stb
         GIT_REPOSITORY https://github.com/nothings/stb.git
         GIT_TAG master)
-    
+
     # Create interface library for STB (header-only)
     add_library(stb INTERFACE)
     target_include_directories(stb SYSTEM INTERFACE ${stb_SOURCE_DIR})
@@ -310,7 +310,7 @@ if(SPOOFIQ_BUILD_APP)
             VERSION_MINOR ${PROJECT_VERSION_MINOR}
             VERSION_PATCH ${PROJECT_VERSION_PATCH}
             COMPANY_NAME "AI-Warevo"
-            COMPANY_COPYRIGHT "Copyright 2024 AI-Warevo"
+            COMPANY_COPYRIGHT "Copyright 2026 AI-Warevo"
             FILE_DESCRIPTION "Media metadata spoofing tool"
             COMMENTS "Spoofiq v${PROJECT_VERSION}"
             ORIGINAL_FILENAME "spoofiq.exe"
